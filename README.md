@@ -29,6 +29,7 @@ It is deliberately **not** a generic LMS, a generic chatbot, or a generic admin 
 | `GET /api/me/recommendations` | deterministic scores (2.33, 1.52, 1.40) with reasons |
 | `POST /api/assistant/ask` | grounded answer, **3 page-anchored citations** |
 | Seed | 32 competencies, 8 job roles, 17 courses, 14 users, 3 indexed documents |
+| Automated tests | **102 passed** (`pytest tests/` — auth, RBAC/IDOR, gap engine, malicious uploads, pgvector RAG SQL isolation, citation stripping, quiz validation V1–V6) |
 | Frontend | `tsc --noEmit` clean, `vite build` OK (191 kB main / 62 kB gzip) |
 
 **AI mode note.** In the sandbox the API process was started without AI env vars, so the assistant

@@ -47,11 +47,14 @@ does not establish compliance with any regulation. Items under “Unverified” 
 
 ## Unverified / requires deployment-level review
 
-1. **The automated test suite is partial.** `backend/tests/` now holds 76 passing tests covering
-   authentication, RBAC/IDOR and the gap engine (see `docs/04-TEST-REPORT.md`), and writing it found
-   and fixed six real defects. **Still untested:** malicious-upload handling (magic-byte sniffing,
-   size cap, path traversal), prompt-injection resistance, quiz validation rules V1–V6, chunk-level
-   RAG cross-user leakage, and dependency auditing. Claims about those rest on code reading only.
+1. **Automated test coverage.** `backend/tests/` now holds **102 passing tests** covering
+   authentication (17), RBAC/IDOR (29), the gap engine (30), and malicious-upload handling,
+   prompt-injection detection/fencing, SQL-level pgvector RAG cross-user isolation, citation
+   stripping, and quiz validation rules V1–V6 (26) — see `docs/04-TEST-REPORT.md`. Writing and
+   expanding the suite found and fixed **seven** real application defects (including a JSONB
+   in-place mutation bug that caused shuffled quiz attempts to be mis-scored). **Still not
+   automated:** live adversarial LLM jailbreak evaluation against an external model and dependency
+   auditing (`pip-audit` / `npm audit`).
 2. No penetration test, no fuzzing of the PDF/DOCX parsers, no adversarial corpus.
 3. Prompt-injection resistance has one regex-based detector and a structural fence; it has **not**
    been tested against a determined attacker.

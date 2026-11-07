@@ -330,12 +330,13 @@ def start_attempt(
 
     # Per-attempt option order, so re-attempts do not memorise positions.
     rng = random.Random(f"{attempt.id}")
+    order_map: dict[str, list[int]] = {}
     rendered = []
     for question in active:
         indices = list(range(len(question.options)))
         if quiz.shuffle_options:
             rng.shuffle(indices)
-        attempt.option_order[str(question.id)] = indices
+        order_map[str(question.id)] = indices
         rendered.append(
             {
                 "question_id": str(question.id),
@@ -348,6 +349,7 @@ def start_attempt(
                 "source_page": question.source_page,
             }
         )
+    attempt.option_order = order_map
     db.commit()
     return {
         "attempt_id": str(attempt.id),

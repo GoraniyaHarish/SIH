@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-07
 **Command:** `cd backend && PYTHONPATH=. ../.venv/bin/pytest tests/`
-**Result:** `76 passed in 49.15s`
+**Result:** `102 passed in 50.16s`
 
 Every number in this report was produced by actually running the suite. Nothing here is
 projected or estimated.
@@ -15,11 +15,11 @@ projected or estimated.
 |---|---|
 | Python | 3.13.14 |
 | pytest | 8.3.4 |
-| Database | PostgreSQL 17.11 + pgvector 0.8.0 + pg_trgm
+| Database | PostgreSQL 17.11 + pgvector 0.8.0 + pg_trgm |
 | Test database | `pramana_test` (separate from the development database) |
 | Schema source | Real Alembic migration (`alembic upgrade head`), **not** `create_all` |
-| AI provider | Deliberately **unconfigured** (`AI_BASE_URL`/`AI_API_KEY` blanked) |
-| Redis | Deliberately **unset** — the in-process limiter is exercised |
+| AI provider | Deliberately **unconfigured** by default (`AI_BASE_URL`/`AI_API_KEY` blanked); targeted mocks exercise LLM citation verification |
+| Redis | Deliberately **unset** in pytest — the in-process limiter is exercised deterministically |
 | Upload storage | Per-run temporary directory |
 
 ### Why the schema comes from the migration
@@ -45,7 +45,8 @@ one another. The rate-limiter singleton is cleared before and after every test.
 | `test_auth.py` | 17 | Authentication, session lifecycle, token security | **17 passed** |
 | `test_authorization.py` | 29 | RBAC role gates, ownership, IDOR resistance | **29 passed** |
 | `test_gap_engine.py` | 30 | Deterministic gap arithmetic and recommendation rules | **30 passed** |
-| **Total** | **76** | | **76 passed, 0 failed, 0 skipped** |
+| `test_rag_quiz_upload.py` | 26 | Malicious uploads, prompt-injection fencing, SQL-level pgvector RAG isolation, citation stripping, quiz validation V1–V6, quiz attempt lifecycle | **26 passed** |
+| **Total** | **102** | | **102 passed, 0 failed, 0 skipped** |
 
 ---
 
@@ -167,12 +168,49 @@ Additional behaviour verified:
 - **Quiz evidence is bounded in the real pipeline** — setting `quiz_evidence = 1.0` on a
   level-3.0 state yields 3.5 (not 5.0), reported with source `self+quiz`.
 
+### `test_rag_quiz_upload.py` — 26 tests
+
+- **Malicious & malformed uploads (9 tests)** — ELF executable disguised as `.pdf` rejected
+  by magic bytes (422 `unsupported_type`); raw `.zip` without `.docx` rejected; NUL bytes in
+  `.txt` rejected as `binary_disguised`; invalid UTF-8 rejected as `encoding`; empty upload
+  rejected; corrupt `%PDF-1.7` body caught during inline processing and marked
+  `status=failed` instead of HTTP 500; text under 200 chars marked `no_text`; streamed size
+  cap returns **413** when exceeded; client filename is replaced with UUID hex and
+  `file_path()` raises `path_traversal` if `stored_name` attempts `../../` escape.
+- **Prompt-injection detection & fencing (6 tests)** — `scan_for_injection` detects 5
+  canonical override patterns; uploading a document containing injection instructions sets
+  `error_code="prompt_injection_flagged"` while wrapping retrieved chunks inside
+  `<<<UNTRUSTED_SOURCE_DATA id=S1>>>` fences and keeping `SYSTEM_PROMPT` untainted.
+- **Chunk-level RAG SQL authorization & citation verification (3 tests)** —
+  1. Seeds 1536-dim pgvector embeddings on a private document, a Department A document, and
+     an organisation-wide document with identical 1.000 cosine similarity to the query
+     vector. Verifies that an outsider in Department B retrieves **only** the
+     organisation-wide chunk (even when explicitly passing the private document ID to
+     `retrieve()`), a Department A colleague retrieves Department A + organisation chunks
+     but never the private chunk, and the owner retrieves all three.
+  2. Verifies `_keyword_retrieve` never leaks private chunk text across users.
+  3. Verifies LLM-mode citation stripping: fabricated citation `[S9]` is stripped while
+     valid `[S1]` is retained; an answer containing only fabricated citation `[S7]` is
+     withheld entirely (`mode="refused"`, `grounded=False`, `insufficient_evidence=True`).
+- **Quiz validation rules V1–V6 & end-to-end lifecycle (8 tests)** —
+  - Valid item passes all six rules (`state="validated"`).
+  - **V1**: rejects <4 options, out-of-range `correct_index`, and `"All of the above"`.
+  - **V2**: rejects options that are identical after case/punctuation normalisation.
+  - **V3**: rejects ungrounded quotes (low token overlap) and unknown `source_id`.
+  - **V4**: rejects correct options whose content words do not appear in the passage.
+  - **V5/V3 verbatim**: rejects reordered paraphrases that are not verbatim substrings.
+  - **V6**: rejects duplicate question stems within the same quiz.
+  - **End-to-end lifecycle**: manager uploads document → generates draft quiz → learner
+    gets 404 on draft → manager publishes → learner starts attempt (with shuffled options),
+    submits 100% correct answers → `STAT.01` competency level advances from `3.0` to `3.5`
+    (`self+quiz`).
+
 ---
 
 ## 4. Bugs this suite found and fixed
 
-The suite was not written after the fact to confirm working code. Six genuine defects
-surfaced during the first run and were fixed in the application:
+The suite was not written after the fact to confirm working code. **Seven** genuine defects
+surfaced during test execution and were fixed in the application:
 
 | # | Location | Defect | Fix |
 |---|---|---|---|
@@ -182,47 +220,33 @@ surfaced during the first run and were fixed in the application:
 | 4 | `framework.py` job-role serialisation | Same latent bug: `JobRoleOut.model_validate(role)` coerced `requirements` into `RoleRequirementOut`, which needs joined competency fields → **HTTP 500 on `/api/framework/job-roles/{id}`** | Added `_job_role_base()` for the flat columns; joined requirements attached by the caller |
 | 5 | `schemas.DomainGapAggregate` | `average_deficit: float` / `learners_with_gap: int` were non-optional, but the k-anonymity rule sets them to `None` when fewer than 5 learners are affected → **HTTP 500 whenever suppression triggered** | Declared both `| None` with a comment explaining that `None` means *suppressed*, never *zero* |
 | 6 | `schemas.AdminOverviewOut` vs `analytics.admin_overview` | Schema required `ai_configured`; the service never returned it → **HTTP 500 on `/api/admin/overview`** | Service now reports `settings.ai_configured` |
-
-Defects 1, 2, 3, 5 and 6 would have made the corresponding screens fail with a generic
-error for a real user. They were invisible in the earlier manual smoke test because that
-test only exercised `/api/health`, login, `/api/me/gaps`, `/api/me/recommendations` and
-`/api/assistant/ask` — none of which touch these paths. **This is precisely the gap the
-suite was written to close, and it closed it.**
+| 7 | `quiz.py` `start_attempt` | Mutated `attempt.option_order[str(question.id)] = indices` in place after `db.flush()` on a SQLAlchemy `JSONB` column without `MutableDict`, so SQLAlchemy did not detect the change and persisted `{}` → **shuffled quiz attempts were graded against unshuffled indices (`0,1,2,3`), mis-scoring learners** | Built `order_map` as a fresh dict and assigned `attempt.option_order = order_map` before commit |
 
 ---
 
-## 5. Coverage honesty — what is NOT tested
+## 5. Coverage honesty — what is tested vs what remains unverified
 
-The prompt for security testing named specific categories. Here is the true status of each:
-
-| Required category | Status |
+| Category | Status |
 |---|---|
 | Authentication | ✅ Tested (17 tests) |
 | Authorization / RBAC | ✅ Tested (29 tests) |
 | Cross-user / IDOR | ✅ Tested |
-| Input validation | ✅ Partly — schema-level rejection and non-echoing of secrets verified; no exhaustive fuzzing |
-| RAG authorization | ⚠️ **Partly** — unauthorized document id is rejected before retrieval (tested). The SQL predicate inside `retrieve()` and chunk-level leakage are verified by code reading, not by a test that seeds embeddings and attempts a cross-user vector search. **This is the most significant remaining hole.** |
-| Prompt injection | ❌ **Not tested** — `scan_for_injection` and the `UNTRUSTED_SOURCE_DATA` fencing exist and were inspected, but no test asserts that injected text in a document cannot alter assistant output. |
-| Malicious upload | ❌ **Not tested** — `sniff_mime` magic-byte validation, the 20 MB cap, and the path-traversal guard in `file_path()` are implemented but have no executable test. |
-| Quiz validation rules V1–V6 | ❌ **Not tested** — `_validate_item` was inspected but each rejection path is unasserted. |
+| Input validation | ✅ Schema-level rejection, secret non-echoing, and upload validation tested; no exhaustive grammar fuzzing |
+| RAG authorization (SQL + pgvector) | ✅ Tested — both pre-retrieval ID check and SQL-level pgvector cosine-distance + keyword retrieval isolation across private, department, and organisation scopes |
+| Citation verification | ✅ Tested — hallucinated `[S#]` stripping and refusal when zero valid citations remain |
+| Prompt injection | ⚠️ **Partly** — regex detection (`scan_for_injection`), `prompt_injection_flagged` status, and `<<<UNTRUSTED_SOURCE_DATA>>>` fencing are tested; live adversarial LLM jailbreak evaluation against an external model is not automated |
+| Malicious upload | ✅ Tested — magic-byte sniffing, binary masquerade, invalid UTF-8, corrupt PDF handling, 413 size cap, UUID filename sanitisation, and path-traversal guard |
+| Quiz validation rules V1–V6 | ✅ Tested — all six rules and the full draft → publish → shuffled attempt → bounded competency feedback loop |
 | API security / headers | ✅ Tested |
 | Dependency checks | ❌ Not run — no `pip-audit`/`npm audit` executed in this environment |
-
-The categories marked ❌ are the honest remainder. They are not claimed as verified
-anywhere in the project documentation.
 
 ### Not tested because the environment cannot test it
 
 - **Docker Compose startup** — Docker is not installed in this sandbox. `docker-compose.yml`,
   both Dockerfiles and `deploy/init-db.sql` were written and the Compose file was
-  YAML-parsed successfully, but **the stack has never been brought up**. Treat the Compose
-  path as unexecuted.
-- **LLM-mode RAG answering** — every test runs with the provider unconfigured, so only the
-  extractive and keyword paths are covered. The LLM path, citation stripping and the
-  `INSUFFICIENT_EVIDENCE` refusal were verified by manual inspection and one earlier live
-  call, not by an automated test.
-- **pgvector semantic retrieval** — with no embedding provider, no chunk in the test
-  database has a vector, so the cosine-distance query is untested.
+  YAML-parsed successfully, but **the stack has never been brought up via Docker**.
+- **Live external LLM adversarial red-teaming** — unit tests mock `ai.embed` and `ai.chat`
+  to deterministically test citation stripping and refusal logic without network calls.
 
 ---
 
@@ -232,15 +256,9 @@ anywhere in the project documentation.
 # Prerequisites: PostgreSQL 17 with the vector and pg_trgm extensions available,
 # and a database named pramana_test.
 
-# The extensions must exist before migrations run. If the application role is not a
-# superuser, create them as a superuser:
 sudo -u postgres psql -d pramana_test -c "CREATE EXTENSION IF NOT EXISTS vector; CREATE EXTENSION IF NOT EXISTS pg_trgm;"
 
 cd backend
-PYTHONPATH=. ../.venv/bin/pytest tests/            # full suite
+PYTHONPATH=. ../.venv/bin/pytest tests/            # full suite (102 tests)
 PYTHONPATH=. ../.venv/bin/pytest tests/ -q -v      # per-test names
 ```
-
-The suite reads `TEST_DATABASE_URL` if set, otherwise defaults to
-`postgresql+psycopg://pramana:pramana_local_dev@127.0.0.1:5432/pramana_test`.
-It blanks the AI credentials itself, so it never calls out to a network provider.
