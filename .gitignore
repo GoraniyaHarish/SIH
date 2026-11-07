@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets — never commit
+.env
+.env.local
+.dev.vars
+*.pem
+*.key
+
+# Data & uploads
+backend/storage/uploads/*
+!backend/storage/uploads/.gitkeep
+*.sqlite3
+*.db
+
+# Node
+node_modules/
+frontend/dist/
+dist/
+
+# Logs & runtime
+*.log
+pids/
+*.pid
+logs/
+.pm2/
+
+# Archives
+*.tar.gz
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db
