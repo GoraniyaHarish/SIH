@@ -637,8 +637,10 @@ class DomainGapAggregate(BaseModel):
     domain_code: str
     domain_name: str
     competency_count: int
-    average_deficit: float
-    learners_with_gap: int
+    # None means the cell was suppressed by the k-anonymity rule (fewer than
+    # SUPPRESSION_THRESHOLD affected learners), never that the value was zero.
+    average_deficit: float | None
+    learners_with_gap: int | None
 
 
 class ManagerAnalyticsOut(BaseModel):
@@ -668,7 +670,6 @@ class AdminOverviewOut(BaseModel):
     ai_error_rate_24h: float | None
     integrations: list[dict]
     audit_events_24h: int
-
 
 # ------------------------------------------------------------------ integrations
 class IntegrationStatusOut(BaseModel):

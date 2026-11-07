@@ -34,6 +34,28 @@ def active_framework(db: Session) -> FrameworkVersion:
     return fw
 
 
+def _job_role_base(role: JobRole) -> JobRoleOut:
+    """Serialise only the flat columns of a job role.
+
+    `JobRoleOut.model_validate(role)` cannot be used directly: the ORM `requirements`
+    relationship would be coerced into `RoleRequirementOut`, which needs joined
+    competency_code / competency_name / domain_name values that the ORM object does not carry.
+    Callers attach the joined requirements themselves.
+    """
+    return JobRoleOut(
+        id=role.id,
+        code=role.code,
+        title=role.title,
+        description=role.description,
+        cadre=role.cadre,
+        grade=role.grade,
+        evidence_status=role.evidence_status,
+        review_status=role.review_status,
+        requirement_count=0,
+        requirements=[],
+    )
+
+
 # ---------------------------------------------------------------- read (any authenticated user)
 @router.get("/framework", response_model=FrameworkOut)
 def get_framework(db: Session = Depends(get_db)) -> FrameworkOut:
@@ -146,7 +168,9 @@ def get_job_roles(db: Session = Depends(get_db)) -> list[JobRoleOut]:
     )
     out = []
     for role in roles:
-        item = JobRoleOut.model_validate(role)
+        # requirements is left empty here: RoleRequirementOut needs joined competency fields that
+        # do not exist on the ORM relationship, so a direct model_validate would fail.
+        item = _job_role_base(role)
         item.requirement_count = int(counts.get(role.id, 0))
         out.append(item)
     return out
@@ -164,7 +188,7 @@ def get_job_role(role_id: uuid.UUID, db: Session = Depends(get_db)) -> JobRoleOu
         .where(RoleCompetencyRequirement.job_role_id == role.id)
         .order_by(RoleCompetencyRequirement.importance.desc(), Competency.code)
     ).all()
-    out = JobRoleOut.model_validate(role)
+    out = _job_role_base(role)
     out.requirements = [
         RoleRequirementOut(
             competency_id=comp.id, competency_code=comp.code, competency_name=comp.name,

@@ -122,6 +122,12 @@ belongs to another user).
 
 ## Deployment
 
-Docker Compose (api + web + postgres/pgvector + redis). Postgres and Redis are never exposed
-publicly; only the web container publishes a port. Alembic is the single migration path and is run
-before the API starts.
+Docker Compose (api + web + postgres/pgvector + redis), defined in `docker-compose.yml` with
+`backend/Dockerfile`, `frontend/Dockerfile` and `deploy/init-db.sql`. Postgres and Redis are never
+exposed publicly; only the web container publishes a port. Alembic is the single migration path and
+runs in the API container's start command, before uvicorn binds.
+
+> **Execution status:** the Compose file is YAML-valid but has **never been brought up** — Docker is
+> not installed in the development sandbox where this project was built. The images, health checks
+> and startup ordering are unexecuted. The stack that *was* actually run is a native PostgreSQL 17
+> + Redis + uvicorn + Vite preview on the host (see `README.md`).

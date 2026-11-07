@@ -10,8 +10,10 @@ import datetime as dt
 import uuid
 from collections import Counter, defaultdict
 
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
+
+from app.core.config import settings
 
 from app.models.assessment import (
     Assessment, CompetencyState, LearningPlan, PlanItem, Quiz, QuizAttempt,
@@ -122,7 +124,7 @@ def manager_analytics(
         select(
             Course.title,
             func.count(Enrolment.id).label("enrolled"),
-            func.sum(func.cast(Enrolment.status == "completed", func.INTEGER())).label("done"),
+            func.sum(case((Enrolment.status == "completed", 1), else_=0)).label("done"),
             func.avg(Enrolment.progress_percent).label("avg_progress"),
         )
         .join(Enrolment, Enrolment.course_id == Course.id)
@@ -210,8 +212,13 @@ def manager_analytics(
 def admin_overview(db: Session) -> dict:
     from app.models.base import Role
 
+    # `users.role` is stored as a plain string column, so the driver returns str, not Role.
+    # Accept either shape so this cannot regress if the column type ever changes.
+    def _role_key(value: object) -> str:
+        return value.value if hasattr(value, "value") else str(value)
+
     users_by_role = {
-        role.value: int(count)
+        _role_key(role): int(count)
         for role, count in db.execute(
             select(User.role, func.count(User.id)).group_by(User.role)
         ).all()
@@ -250,6 +257,7 @@ def admin_overview(db: Session) -> dict:
         "courses_total": int(db.scalar(select(func.count(Course.id))) or 0),
         "quizzes_total": int(db.scalar(select(func.count(Quiz.id))) or 0),
         "attempts_total": int(db.scalar(select(func.count(QuizAttempt.id))) or 0),
+        "ai_configured": settings.ai_configured,
         "ai_calls_24h": ai_calls,
         "ai_error_rate_24h": (
             round(100.0 * ai_errors / ai_calls, 1) if ai_calls else None

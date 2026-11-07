@@ -158,8 +158,12 @@ def get_assessment(
         .where(AssessmentResponse.assessment_id == assessment.id)
         .order_by(Competency.code)
     ).all()
-    out = AssessmentDetailOut.model_validate(assessment)
-    out.response_count = len(rows)
+    # Build from the flat parent model first. Validating `assessment` directly would make Pydantic
+    # coerce the ORM `responses` relationship into AssessmentResponseOut, which cannot work because
+    # competency_code/competency_name are joined fields that do not exist on the ORM object.
+    base = AssessmentOut.model_validate(assessment)
+    base.response_count = len(rows)
+    out = AssessmentDetailOut(**base.model_dump())
     out.responses = [
         AssessmentResponseOut(
             competency_id=comp.id, competency_code=comp.code, competency_name=comp.name,
