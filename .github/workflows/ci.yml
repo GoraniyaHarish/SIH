@@ -146,10 +146,8 @@ jobs:
           curl --fail --silent http://localhost:3000/api/docs | grep -qi 'swagger'
       - name: Seed isolated CI-only demonstration accounts
         shell: bash
-        env:
-          DEMO_PASSWORD: ${{ env.PRAMANA_DEMO_PASSWORD }}
         run: |
-          docker compose exec -T -e DEMO_PASSWORD="$DEMO_PASSWORD" -e ALLOW_DEMO_SEED=1 api python seed.py > /tmp/pramana-seed.log 2>&1 || {
+          docker compose exec -T -e DEMO_PASSWORD="$PRAMANA_DEMO_PASSWORD" -e ALLOW_DEMO_SEED=1 api python seed.py > /tmp/pramana-seed.log 2>&1 || {
             tail -n 40 /tmp/pramana-seed.log
             exit 1
           }
@@ -163,7 +161,6 @@ jobs:
         env:
           PLAYWRIGHT_MODULE: /tmp/pramana-e2e/node_modules/playwright/index.mjs
           PRAMANA_BASE_URL: http://localhost:3000
-          PRAMANA_DEMO_PASSWORD: ${{ env.PRAMANA_DEMO_PASSWORD }}
         run: node frontend/e2e/roles.mjs
       - name: Show Compose logs on failure and clean up
         if: always()
