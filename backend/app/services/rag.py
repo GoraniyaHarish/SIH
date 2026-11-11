@@ -215,8 +215,10 @@ def answer(
     started = time.perf_counter()
     question = question.strip()
 
-    if not ai.enabled:
-        # Without embeddings we cannot do semantic retrieval; fall back to keyword search.
+    external_ok = settings.ai_send_documents_externally if allow_external is None else allow_external
+    if not ai.enabled or not external_ok:
+        # Without an explicitly approved external provider, do not send even the query text
+        # for embeddings. Use local keyword retrieval over authorised document chunks.
         chunks = _keyword_retrieve(db, actor, question, document_ids)
         if not chunks:
             return AskResponse(
@@ -257,16 +259,6 @@ def answer(
             insufficient_evidence=True,
             noanswer_reason="No passage in the documents you can access is relevant enough to "
                             "support an answer.",
-            latency_ms=int((time.perf_counter() - started) * 1000),
-        )
-
-    external_ok = settings.ai_send_documents_externally if allow_external is None else allow_external
-    if not external_ok:
-        return AskResponse(
-            answer=_extractive_answer(chunks), grounded=True, mode="extractive",
-            citations=_to_citations(chunks[:3]), insufficient_evidence=False,
-            noanswer_reason="Outbound document text to the AI provider is disabled by policy; "
-                            "returning verbatim passages instead.",
             latency_ms=int((time.perf_counter() - started) * 1000),
         )
 
