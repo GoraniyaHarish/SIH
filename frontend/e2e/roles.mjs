@@ -43,7 +43,7 @@ try {
     const page = await context.newPage()
     page.on('pageerror', (error) => failures.push(`${scenario.role}: ${error.message}`))
 
-    await page.goto(`${baseURL}/login`, { waitUntil: 'networkidle' })
+    await page.goto(`${baseURL}/login`, { waitUntil: 'domcontentloaded' })
     await page.getByLabel('Email').fill(scenario.email)
     await page.getByLabel('Password').fill(password)
     await page.getByRole('button', { name: 'Sign in', exact: true }).click()
@@ -60,7 +60,7 @@ try {
     }
 
     for (const route of scenario.routes) {
-      await page.goto(`${baseURL}${route}`, { waitUntil: 'networkidle' })
+      await page.goto(`${baseURL}${route}`, { waitUntil: 'domcontentloaded' })
       if (scenario.role !== 'admin' && route === '/app/analytics') {
         await page.getByRole('heading', { name: 'Training intelligence' }).waitFor()
       } else if (scenario.role === 'admin') {
@@ -77,7 +77,7 @@ try {
     }
 
     if (!scenario.admin) {
-      await page.goto(`${baseURL}/app/admin`, { waitUntil: 'networkidle' })
+      await page.goto(`${baseURL}/app/admin`, { waitUntil: 'domcontentloaded' })
       await page.waitForURL((url) => url.pathname === '/app', { timeout: 10000 })
       if ((await adminLink.count()) !== 0) {
         throw new Error(`${scenario.role}: admin-only route was not blocked`)
