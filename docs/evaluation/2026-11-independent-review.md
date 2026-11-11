@@ -230,14 +230,12 @@ Do not claim live iGOT synchronization, official MoSPI competency approval, pred
 
 ## 8. Verification record and limitations
 
-- Added `.github/workflows/ci.yml` to run the backend suite against PostgreSQL + pgvector and build the frontend on pull requests and pushes to the review branch. The workflow has been committed but no completed Actions run is visible yet; its result is therefore pending.
-
-
-- The baseline documentation reports 102 passing backend tests on 7 November 2026. This is a repository claim and historical test report; it was **not reproduced** during this review.
-- The current stabilization branch includes additional path traversal tests, but no test command was executed by this review.
-- Docker is not available through the GitHub source-review connector; no Docker build or Compose startup was performed.
-- No browser session against a running deployment was available; frontend journeys were not independently exercised.
-- No dependency audit was run.
+- Added `.github/workflows/ci.yml` to run backend tests against PostgreSQL + pgvector, frontend production builds, Docker image builds, and advisory Python/npm dependency audits.
+- GitHub Actions run `42956672630` completed successfully for the backend and frontend jobs. The backend output reached 100% with 109 test progress markers (72 + 37); frontend `npm ci` and `npm run build` both completed successfully. This run predates the later Docker-build and dependency-audit jobs.
+- A follow-up Actions run `42956949637` was started after adding Docker builds and dependency audits. At the time of this report update, its Docker build and audit jobs were still in progress; do not treat those as passed.
+- The backend test run emitted a `pytest-asyncio` warning because fixture loop scope was unset. Set `asyncio_default_fixture_loop_scope = function` in `backend/pytest.ini`; this configuration change is included in the follow-up run.
+- Docker/Compose startup as a full stack and browser-based user journeys have not been verified. The Docker-image build job is a partial check, not a substitute for Compose integration testing.
+- Dependency audit results are pending; the audit job is currently advisory (`continue-on-error`) and must be triaged before production.
 - No penetration test, live adversarial LLM evaluation, or government integration test was performed.
 - The official SIH portal's exact SIH 26101 record was not independently retrieved; the full problem text used above was available through a secondary listing. Reconfirm against the official portal before final presentation.
 - No official approval of PRAMANA's provisional competency framework is claimed.
