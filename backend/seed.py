@@ -458,6 +458,9 @@ def seed_notifications(db, users: dict[str, User]) -> None:
 
 
 def main() -> int:
+    if len(DEMO_PASSWORD) < 12:
+        print("Set DEMO_PASSWORD to a unique value of at least 12 characters before seeding.")
+        return 2
     if settings.is_production and os.getenv("ALLOW_DEMO_SEED") != "1":
         print("Refusing to seed demonstration data in production. Set ALLOW_DEMO_SEED=1 to override.")
         return 1
