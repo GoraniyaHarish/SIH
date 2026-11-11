@@ -62,7 +62,7 @@ PRAMANA's differentiator should be the traceable connection between **role → e
 
 The repository is a React/TypeScript/Vite frontend and a FastAPI/Python backend with PostgreSQL/pgvector, SQLAlchemy, Alembic, Redis support, a provider-neutral AI HTTP client, Docker Compose and backend tests.
 
-The source review inspected the README, Docker and environment configuration, backend API routers, authentication, configuration, database models, competency/gap/recommendation services, document ingestion, RAG, quiz generation and grading, integration adapters, seed script, test suite and architecture/security/test documentation. This was a source-level review; not every frontend component or every line of every file was executed.
+The source review inspected the README, Docker and environment configuration, backend API routers, authentication, configuration, database models, competency/gap/recommendation services, document ingestion, RAG, quiz generation and grading, integration adapters, seed script, test suite and architecture/security/test documentation. Follow-up CI also executed the backend suite, clean Compose deployment/migration and targeted browser journeys; this is still not exhaustive exploratory testing of every control.
 
 ### Feature status matrix
 
@@ -122,7 +122,7 @@ The source review inspected the README, Docker and environment configuration, ba
 3. A provisional framework is not an approved Official Statistics competency framework.
 4. AI-based competency assessment is not fully demonstrated; deterministic gap scoring and AI MCQ generation are different capabilities.
 5. Predictive analytics, multilingual support, virtual labs and SSO are not evidenced as working end-to-end.
-6. Runtime deployment and live user journeys have not been independently verified in this review.
+6. The initial static review had no runtime evidence. Follow-up CI now verifies a clean Compose startup, database migration, API readiness and four role journeys, but not a live production deployment.
 7. Citation markers are checked against retrieved source IDs, but that does not prove that each claim is entailed by its cited passage.
 
 ---
@@ -131,13 +131,13 @@ The source review inspected the README, Docker and environment configuration, ba
 
 | Finding on baseline | Change made on stabilization branch | Verification status |
 |---|---|---|
-| Backend Dockerfile had duplicated `useradd --create-home` command | Corrected to one user creation command; upload directory is created and ownership assigned before switching to non-root user | Static diff reviewed; Docker build not run |
-| File containment used string-prefix comparison, which can accept sibling-prefix paths | Uses resolved `Path.is_relative_to(root)` and rejects root itself; added tests for sibling-prefix and symlink escapes | Code and tests committed; tests not run |
-| Production cookie default was insecure; Compose default was false | Production settings now reject insecure cookies and wildcard CORS; Compose defaults secure cookies to true | Static diff reviewed; settings tests not run |
-| External AI document sharing was enabled by default | Default is false; ingestion does not send document chunks for embeddings unless enabled; RAG does not send query text for embeddings unless explicitly allowed | Static diff reviewed; test coverage still needed |
-| README contained shared demo credentials; seed script contained a hard-coded shared password | Removed password/table from README; seed now requires a unique `DEMO_PASSWORD` environment variable of at least 12 characters before database writes | Static diff reviewed; seed execution not run |
+| Backend Dockerfile had duplicated `useradd --create-home` command | Corrected to one user creation command; upload directory is created and ownership assigned before switching to non-root user | Backend and frontend Docker images built successfully in CI; clean Compose deployment also passed |
+| File containment used string-prefix comparison, which can accept sibling-prefix paths | Uses resolved `Path.is_relative_to(root)` and rejects root itself; added tests for sibling-prefix and symlink escapes | Regression tests included in the 109-test suite, which passed; clean Compose deployment passed |
+| Production cookie default was insecure; Compose default was false | Production settings now reject insecure cookies and wildcard CORS; Compose defaults secure cookies to true | 109-test suite and production-mode Compose startup passed |
+| External AI document sharing was enabled by default | Default is false; ingestion does not send document chunks for embeddings unless enabled; RAG does not send query text for embeddings unless explicitly allowed | 109-test suite passed; no external AI provider was configured, so real outbound provider transmission was not exercised |
+| README contained shared demo credentials; seed script contained a hard-coded shared password | Removed shared password from README, seed defaults and frontend login UI; seed requires a unique `DEMO_PASSWORD` of at least 12 characters | CI seeded disposable demo accounts with a generated private password; browser journeys passed |
 | README overstated citation verification | Clarified that source-ID validation does not establish semantic entailment | Documentation change reviewed |
-| Demo seeding bypassed the outbound-AI opt-in when an AI provider was configured | Updated `seed_demo_documents()` to require both provider availability and `AI_SEND_DOCUMENTS_EXTERNALLY=true` before embedding demo document text | Static source change reviewed; regression test/runtime execution still pending |
+| Demo seeding bypassed the outbound-AI opt-in when an AI provider was configured | Updated `seed_demo_documents()` to require both provider availability and `AI_SEND_DOCUMENTS_EXTERNALLY=true` before embedding demo document text | Seed privacy regression test and CI seed execution passed; no external AI provider was configured |
 
 ### Security caveat
 
@@ -153,13 +153,13 @@ The external AI setting now defaults to false and gates both document embeddings
 
 ### P0 — Stabilization and safety
 
-1. Run the complete backend suite on the stabilization branch and fix regressions.
-2. Add tests for production configuration validation, outbound AI opt-in, and the new storage containment cases.
-3. Run `pip-audit` and `npm audit`; triage findings rather than blindly upgrading.
-4. Verify Docker build and Compose startup from a clean database/volume.
-5. Rotate previously exposed demo credentials and revoke sessions.
-6. Verify the deployed reverse proxy uses HTTPS and forwards headers only from trusted proxies.
-7. Review refresh-cookie CSRF exposure and add explicit CSRF protection if cookie-authenticated unsafe requests can be triggered cross-site in the actual deployment model.
+1. **Completed:** full backend suite passed on the stabilization branch (109 passed, 3 warnings).
+2. **Completed:** production configuration, outbound-AI opt-in and storage-containment regression coverage passed in the suite.
+3. **Completed:** `pip-audit` reported no known vulnerabilities; `npm audit --omit=dev` reported 0 vulnerabilities; React Router 7.18.5 was verified.
+4. **Completed:** backend/frontend Docker builds and a fresh production-mode Compose deployment passed; Alembic migration, API health, PostgreSQL, Redis and web proxy checks passed.
+5. **Operational action still required:** rotate previously exposed demo credentials and revoke sessions. Current-source cleanup does not remove old Git history.
+6. **Deployment action still required:** verify the actual production reverse proxy uses HTTPS and forwards headers only from trusted proxies. CI Compose is a smoke environment, not a TLS deployment.
+7. **Security review still required:** review refresh-cookie CSRF exposure in the intended deployment model and add explicit CSRF protection if cross-site unsafe requests remain possible.
 
 ### P1 — Close the SIH core gaps
 
@@ -230,18 +230,19 @@ Do not claim live iGOT synchronization, official MoSPI competency approval, pred
 
 ## 8. Verification record and limitations
 
-- Added `.github/workflows/ci.yml` to run backend tests against PostgreSQL + pgvector, frontend production builds, Docker image builds, and advisory Python/npm dependency audits.
-- GitHub Actions run `42956672630`: backend and frontend jobs completed successfully. Backend reached 100% with 109 test progress markers; frontend install and production build passed.
-- GitHub Actions run `42957102354` after dependency upgrades: backend tests passed; frontend production build passed; backend and frontend Docker image builds passed; Python dependency audit passed with no known vulnerabilities reported by pip-audit.
-- The same run's npm audit failed on two moderate React Router advisories affecting the installed 6.x line. The upstream patched release is 7.18.x. This requires a deliberate major-version migration and lockfile regeneration; it remains an open security task, not a waived finding.
-- Upgraded backend pins: FastAPI 0.143.0, Starlette 1.3.1, PyJWT 2.15.1, pypdf 7.0.1, python-multipart 0.0.33, pytest 9.2.0 and pytest-asyncio 1.4.1.post1. The follow-up backend CI passed with these versions.
-- Set an explicit pytest asyncio fixture loop scope. The updated backend test run still reports Starlette deprecation warnings about httpx TestClient usage and the legacy 422 status constant; these are cleanup items, not test failures.
-- A further CI change now prints verbose per-test output and an explicit pytest summary rather than only progress dots. Its new run is pending; the 109 count above comes from the completed prior run's progress output (72 + 37 markers).
-- Docker image builds passed, but full Docker Compose orchestration against a clean database/volume, browser-based user journeys, live deployment verification, penetration testing and government integration tests have not been performed.
-- NSSTA/iGOT public-source research is recorded in `docs/research/government-learning-ecosystem-evidence.md`. It deliberately distinguishes public catalogue evidence from authenticated integration and approved competency mapping.
-- Previously exposed demo credentials must be rotated and active sessions revoked. Removing them from current files does not erase Git history, clones, forks or screenshots.
-- The official SIH portal's exact SIH 26101 record was not independently retrieved in this review; the problem text used in the report was corroborated through a secondary listing. Reconfirm the original portal record before final presentation.
-- No official approval of PRAMANA's provisional competency framework is claimed.
+- CI workflow: `.github/workflows/ci.yml`. Latest fully green code-verification run: **42958974296** (push) and **42958980611** (pull request), on commit `23c0e630703670e9ce2fb37da40c3e852e79b6fd`. Documentation was subsequently updated in commit `a283e68bd4df59f5b0666a7fc91189f615c74446`; that docs-only commit triggered a fresh CI run.
+- Backend tests against PostgreSQL + pgvector: **109 passed, 3 warnings in 33.30s**. The warnings are non-failing Starlette/httpx and legacy status-constant deprecations.
+- Frontend typecheck and production build passed.
+- Backend and frontend Docker images built successfully.
+- Python dependency audit: `No known vulnerabilities found`. Production frontend audit: `found 0 vulnerabilities`. Lockfile check: `react-router-dom 7.18.5`.
+- Clean Compose test used a fresh disposable PostgreSQL volume and production-mode settings. API startup completed Alembic migration; CI verified the schema revision exists. The health endpoint reported PostgreSQL and Redis as `ok`; the web SPA and Nginx API proxy checks passed.
+- CI seeded only disposable demo accounts with a random masked password and deleted the database/uploads volumes at job end. No shared demo password is a CI default.
+- Playwright browser checks passed for learner, manager, assessor and administrator. Learner core routes, manager/assessor analytics, administrator pages and admin-route denial for non-admin roles were exercised. All four journeys passed with no uncaught browser exceptions.
+- CI explicitly asserted AI is `not_configured` and iGOT Karmayogi/NSSTA remain `not_configured`; no simulated success or unauthorized integration is claimed.
+- These checks are not an exhaustive penetration test, external load test, live production deployment, disaster-recovery test or full exploratory test of every control.
+- The official SIH portal's exact SIH 26101 record was not independently retrieved in this review; the problem text was corroborated through a secondary listing. Reconfirm the original portal record before final presentation.
+- Previously exposed credentials must be rotated and affected sessions revoked. Removing them from current files does not erase Git history, clones, forks or screenshots.
+- No official approval of PRAMANA's provisional competency framework, live iGOT/NSSTA integration or government SSO is claimed.
 
 ## 9. Sources
 
