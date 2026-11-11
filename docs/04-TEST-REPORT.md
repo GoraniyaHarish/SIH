@@ -1,38 +1,43 @@
 # Test report
 
-**Scope:** automated checks on the `pramana-judge-review-stabilization` branch.  
-**Latest recorded successful run:** GitHub Actions run `42959472304` and pull-request run `42959477405`, on commit `14349f8f1cca80e4fcd4c34eb615eed82a8598fd`.
+**Scope:** automated checks on `pramana-judge-review-stabilization`.  
+**Latest successful verification:** push run `42963296590` and pull-request run `42963304645`, both on commit `44ae715f51cc00dfe3e3d53b757d85159b125287`.
 
 ## Results
 
 | Check | Result |
 |---|---|
-| Backend tests (PostgreSQL + pgvector) | 109 passed; 3 warnings |
+| Backend tests (PostgreSQL + pgvector) | 111 passed; 3 warnings |
 | Frontend typecheck and production build | Passed |
-| Backend Docker image | Built |
-| Frontend Docker image | Built |
+| Backend and frontend Docker images | Built |
 | Python dependency audit (`pip-audit`) | No known vulnerabilities reported |
-| Production frontend dependency audit (`npm audit --omit=dev`) | 0 vulnerabilities reported |
+| Production frontend audit (`npm audit --omit=dev`) | 0 vulnerabilities reported |
 | React Router lockfile check | 7.18.5 |
 | Clean production-mode Compose startup | Passed |
-| Database migration and health checks | Passed |
-| API documentation and frontend route checks | Passed |
+| Alembic migration on a fresh database | Passed |
+| API, PostgreSQL and Redis health checks | Passed |
+| Frontend route and API proxy checks | Passed |
+| CI demonstration-data seed | Passed; generated password is masked and not printed |
 | Playwright role journeys | Learner, manager, assessor and administrator passed |
-| Authorization check | Non-admin roles were denied admin routes |
-| Browser console | No uncaught page exceptions observed |
+| Authorization check | Non-admin users were denied admin-only routes |
+| Browser page errors | None observed during the four role journeys |
 | Government integration status | iGOT Karmayogi and NSSTA correctly reported as `not_configured` |
 
-## What these checks establish
+## Test environment
 
-The backend suite ran against PostgreSQL with pgvector. The Compose job started a fresh stack with disposable database and upload volumes, checked the migration and service health, then exercised the application through a browser for each role.
+The backend suite ran against PostgreSQL with pgvector. The Compose job created a fresh production-mode stack with disposable database and upload volumes, applied the migration, checked service health, seeded a private CI-only demonstration cohort, then exercised each role in Chromium. The job removed the disposable volumes after the run.
 
-The dependency audit results describe the dependencies and lockfiles at the tested commit. They are not a guarantee against every vulnerability or future advisory.
+## Limits
 
-## What remains unverified
+- Dependency audits describe the tested lockfiles and package versions; they do not guarantee that future advisories will not affect them.
+- Browser journeys cover the listed workflows, not every interaction or device size.
+- The citation tests verify that citation IDs refer to retrieved passages. They do not prove that every generated claim is semantically entailed by its citation.
+- These checks do not replace manual testing, independent security review or deployment validation.
 
-- Independent penetration testing, fuzzing and broader manual exploratory testing.
-- Production hosting, TLS/reverse-proxy configuration, secrets management, backups and restore drills.
-- Semantic verification that each generated answer claim is fully supported by its cited passage.
+## Still unverified
+
+- Independent penetration testing, parser fuzzing and broader manual exploratory testing.
+- Production hosting, TLS/reverse-proxy configuration, secrets management, backup and restore drills, monitoring and operational runbooks.
 - Validation of the provisional competency framework by MoSPI/NSSTA domain experts.
 - Authorized, end-to-end iGOT Karmayogi or NSSTA integration.
 
