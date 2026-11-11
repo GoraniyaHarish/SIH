@@ -55,7 +55,7 @@ To create local demonstration accounts, set a private password and explicitly en
 docker compose exec -e ALLOW_DEMO_SEED=1 -e DEMO_PASSWORD='use-a-unique-password-here' api python seed.py
 ```
 
-The seed command creates demonstration records. Do not use these accounts or data as real employee records. To stop the application:
+The seed command creates demonstration records using reserved `.test` email addresses. The password is the private value you supplied; the seed does not print it. Do not use these accounts or data as real employee records. To stop the application:
 
 ```bash
 docker compose down
