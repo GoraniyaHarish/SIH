@@ -230,6 +230,9 @@ Do not claim live iGOT synchronization, official MoSPI competency approval, pred
 
 ## 8. Verification record and limitations
 
+- Added `.github/workflows/ci.yml` to run the backend suite against PostgreSQL + pgvector and build the frontend on pull requests and pushes to the review branch. The workflow has been committed but no completed Actions run is visible yet; its result is therefore pending.
+
+
 - The baseline documentation reports 102 passing backend tests on 7 November 2026. This is a repository claim and historical test report; it was **not reproduced** during this review.
 - The current stabilization branch includes additional path traversal tests, but no test command was executed by this review.
 - Docker is not available through the GitHub source-review connector; no Docker build or Compose startup was performed.
