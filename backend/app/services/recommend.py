@@ -1,16 +1,14 @@
-"""Deterministic, explainable recommendations.
+"""Rank courses against a learner's open competency gaps.
 
-Ranking rule (reproducible by hand):
+The course score is the gap priority multiplied by three factors:
 
-    course_score = gap_priority
-                 * level_fit          (1.0 if course covers the needed level, 0.6 if it overshoots,
-                                       0.4 if it only partially covers)
-                 * novelty            (1.0 if not enrolled, 0.5 if in progress, 0.15 if completed)
-                 * freshness          (0.8 if completed within 90 days -> revision suppressed)
-                 + prereq_bonus       (0.3 when all listed course prerequisites are met)
+- Level fit: 1.0 when the course reaches the target, 0.6 when it is one level short,
+  and 0.4 when it is more than one level short.
+- Enrolment: 1.0 when not started, 0.5 while in progress, and 0.15 when completed.
+- Freshness: completed courses receive a further 0.8 multiplier for 90 days.
 
-Only gaps that are not prerequisite-blocked are recommended. AI is not used here: the ranking is
-pure arithmetic on persisted records so that every recommendation can be justified in one sentence.
+Only gaps whose prerequisites are clear are considered. Course prerequisite metadata is not yet
+part of the ranking. Scores are deterministic and can be explained from the stored records.
 """
 from __future__ import annotations
 
@@ -22,7 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.assessment import LearningPlan, PlanItem, Quiz, QuizAttempt
-from app.models.competency import Competency, CompetencyDomain, JobRole
+from app.models.competency import JobRole
 from app.models.learning import Course, CourseCompetency, CourseMaterial, Enrolment
 from app.models.users import User
 from app.services import gap as gap_service
