@@ -65,7 +65,7 @@ createdb pramana   # user: pramana / pramana_local_dev
 # 2. Backend
 cd backend && export PYTHONPATH=. 
 ../.venv/bin/alembic upgrade head
-../.venv/bin/python seed.py
+DEMO_PASSWORD="choose-a-unique-local-password" ../.venv/bin/python seed.py
 ../.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 # 3. Frontend (proxies /api → :8000)
@@ -74,7 +74,7 @@ cd frontend && npm install && npm run dev     # http://localhost:3000
 
 ### Demonstration accounts
 
-Seeded demonstration accounts are created by `backend/seed.py`. Do not publish or reuse shared demo passwords. For any shared deployment, create unique credentials, require password changes, and rotate any credentials that may previously have been exposed.
+Seeded demonstration accounts are created by `backend/seed.py`. Set a unique `DEMO_PASSWORD` (at least 12 characters) when running the seed command; the seed script contains no shared default password. Never reuse that password in a shared deployment.
 
 ---
 
