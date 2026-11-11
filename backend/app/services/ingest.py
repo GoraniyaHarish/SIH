@@ -91,10 +91,10 @@ def create_document(
 
 
 def file_path(document: Document) -> Path:
-    candidate = settings.upload_dir / document.stored_name
-    resolved = candidate.resolve()
+    """Resolve a stored file and reject traversal, sibling-prefix and symlink escapes."""
     root = settings.upload_dir.resolve()
-    if not str(resolved).startswith(str(root)):
+    resolved = (root / document.stored_name).resolve()
+    if not resolved.is_relative_to(root) or resolved == root:
         raise DocumentRejected("path_traversal", "Resolved path escapes the storage root")
     return resolved
 
@@ -149,7 +149,9 @@ def process_document(db: Session, document_id: uuid.UUID) -> None:
         db.add_all(rows)
         db.flush()
 
-        if ai.enabled:
+        # Sending source text to an external embedding provider is disabled by default.
+        # Keyword retrieval remains available when external processing is not approved.
+        if ai.enabled and settings.ai_send_documents_externally:
             for start in range(0, len(rows), MAX_PARALLEL_EMBED):
                 batch = rows[start : start + MAX_PARALLEL_EMBED]
                 result = ai.embed([b.content for b in batch])
