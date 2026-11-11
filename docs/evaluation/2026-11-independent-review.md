@@ -231,15 +231,16 @@ Do not claim live iGOT synchronization, official MoSPI competency approval, pred
 ## 8. Verification record and limitations
 
 - Added `.github/workflows/ci.yml` to run backend tests against PostgreSQL + pgvector, frontend production builds, Docker image builds, and advisory Python/npm dependency audits.
-- GitHub Actions run `42956672630` completed successfully for the backend and frontend jobs. The backend output reached 100% with 109 test progress markers (72 + 37); frontend `npm ci` and `npm run build` both completed successfully. This run predates the later Docker-build and dependency-audit jobs.
-- A follow-up Actions run `42956949637` was started after adding Docker builds and dependency audits. At the time of this report update, its Docker build and audit jobs were still in progress; do not treat those as passed.
-- The backend test run emitted a `pytest-asyncio` warning because fixture loop scope was unset. Set `asyncio_default_fixture_loop_scope = function` in `backend/pytest.ini`; this configuration change is included in the follow-up run.
-- Docker/Compose startup as a full stack and browser-based user journeys have not been verified. The Docker-image build job is a partial check, not a substitute for Compose integration testing.
-- The dependency audit identified vulnerable Python pins in PyJWT 2.10.1, pypdf 5.1.0, python-multipart 0.0.20, pytest 8.3.4 and Starlette 0.41.3. Updated FastAPI/Starlette, PyJWT, pypdf, python-multipart, pytest and pytest-asyncio to patched/current compatible release lines. In run `42957102354`, `pip-audit` completed successfully (no known vulnerabilities reported for the updated backend requirements).
-- The same run's `npm audit --omit=dev` found two moderate React Router advisories affecting the current 6.x dependency; GitHub's recommended fix is React Router 7.18.x, a major-version migration. I have not forced that migration without updating the lockfile and testing the route tree. Frontend dependency audit therefore remains **failed/open**. Do not treat the frontend as audit-clean.
-- Dependency audit job is advisory (`continue-on-error`) so it reports findings without blocking other verification jobs; it must not be interpreted as a security waiver.
-- No penetration test, live adversarial LLM evaluation, or government integration test was performed.
-- The official SIH portal's exact SIH 26101 record was not independently retrieved; the full problem text used above was available through a secondary listing. Reconfirm against the official portal before final presentation.
+- GitHub Actions run `42956672630`: backend and frontend jobs completed successfully. Backend reached 100% with 109 test progress markers; frontend install and production build passed.
+- GitHub Actions run `42957102354` after dependency upgrades: backend tests passed; frontend production build passed; backend and frontend Docker image builds passed; Python dependency audit passed with no known vulnerabilities reported by pip-audit.
+- The same run's npm audit failed on two moderate React Router advisories affecting the installed 6.x line. The upstream patched release is 7.18.x. This requires a deliberate major-version migration and lockfile regeneration; it remains an open security task, not a waived finding.
+- Upgraded backend pins: FastAPI 0.143.0, Starlette 1.3.1, PyJWT 2.15.1, pypdf 7.0.1, python-multipart 0.0.33, pytest 9.2.0 and pytest-asyncio 1.4.1.post1. The follow-up backend CI passed with these versions.
+- Set an explicit pytest asyncio fixture loop scope. The updated backend test run still reports Starlette deprecation warnings about httpx TestClient usage and the legacy 422 status constant; these are cleanup items, not test failures.
+- A further CI change now prints verbose per-test output and an explicit pytest summary rather than only progress dots. Its new run is pending; the 109 count above comes from the completed prior run's progress output (72 + 37 markers).
+- Docker image builds passed, but full Docker Compose orchestration against a clean database/volume, browser-based user journeys, live deployment verification, penetration testing and government integration tests have not been performed.
+- NSSTA/iGOT public-source research is recorded in `docs/research/government-learning-ecosystem-evidence.md`. It deliberately distinguishes public catalogue evidence from authenticated integration and approved competency mapping.
+- Previously exposed demo credentials must be rotated and active sessions revoked. Removing them from current files does not erase Git history, clones, forks or screenshots.
+- The official SIH portal's exact SIH 26101 record was not independently retrieved in this review; the problem text used in the report was corroborated through a secondary listing. Reconfirm the original portal record before final presentation.
 - No official approval of PRAMANA's provisional competency framework is claimed.
 
 ## 9. Sources
