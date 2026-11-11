@@ -10,7 +10,9 @@ These close the five remaining untested categories documented in docs/04-TEST-RE
 """
 from __future__ import annotations
 
+import hashlib
 import uuid
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -544,6 +546,39 @@ class TestQuizValidationRulesAndLifecycle:
         out = quizgen._validate_item(item, {"S1": self.PASSAGE}, set())
         assert not out.ok
         assert any(n.startswith("V5:") for n in out.notes)
+
+    def test_v5_rejects_a_quote_with_a_valid_prefix_and_unrelated_tail(self):
+        item = self._valid_item()
+        item["source_quote"] = self.PASSAGE + " An unrelated sentence was appended."
+        out = quizgen._validate_item(item, {"S1": self.PASSAGE}, set())
+        assert not out.ok
+        assert any(n.startswith("V5:") for n in out.notes)
+
+    def test_extractive_option_order_uses_a_stable_digest(self):
+        sentence = (
+            "Stratification divides a heterogeneous population into internally homogeneous "
+            "strata so that estimator variance is reduced without increasing the nominal sample size."
+        )
+        chunk = SimpleNamespace(content=sentence)
+        distractors = ["sampling", "weighting", "estimation"]
+        with patch.object(quizgen, "_pick_distractors", return_value=distractors):
+            items = quizgen._extractive_generate([chunk], 1)
+
+        assert len(items) == 1
+        candidates = [
+            word.strip(".,;:()")
+            for word in sentence.split()
+            if len(__import__("re").sub(r"[^A-Za-z]", "", word)) >= 7
+            and word.lower().strip(".,;:()") not in quizgen._STOPWORDS
+        ]
+        term = candidates[len(candidates) // 2]
+        base_options = [term, *distractors]
+        order = sorted(
+            range(4),
+            key=lambda index: hashlib.sha256(f"{term}:{index}".encode("utf-8")).digest(),
+        )
+        assert items[0]["options"] == [base_options[index] for index in order]
+        assert items[0]["correct_index"] == order.index(0)
 
     def test_v6_rejects_duplicate_question_stem_within_same_quiz(self):
         item = self._valid_item()
