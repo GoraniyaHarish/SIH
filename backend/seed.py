@@ -35,7 +35,7 @@ from app.services import framework_data as fd
 from app.services.documents import chunk_document, extract
 from app.services.ingest import store_file
 
-DEMO_PASSWORD = "Pramana#2026"
+DEMO_PASSWORD = os.getenv("DEMO_PASSWORD", "")
 
 # Demonstration cohort. The spread of levels is chosen to produce a realistic mix of gaps.
 DEMO_USERS = [
