@@ -77,9 +77,8 @@ jobs:
         run: docker build -t pramana-web:ci ./frontend
 
   dependency-audit:
-    name: Dependency vulnerability audit (advisory)
+    name: Dependency vulnerability audit
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -95,3 +94,6 @@ jobs:
       - name: Audit production frontend dependencies
         working-directory: frontend
         run: npm audit --omit=dev
+      - name: Verify patched React Router version
+        working-directory: frontend
+        run: npm ls react-router-dom
