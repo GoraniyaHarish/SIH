@@ -1,13 +1,4 @@
-"""Tests for document upload security, prompt-injection fencing, chunk-level RAG authorization,
-citation verification, and MCQ validation rules V1-V6.
-
-These close the five remaining untested categories documented in docs/04-TEST-REPORT.md:
-1. Malicious upload handling (magic bytes, binary masquerade, invalid UTF-8, size cap, path traversal)
-2. Prompt-injection detection, quarantine flagging, and structural fencing
-3. Chunk-level RAG authorization inside SQL (both pgvector semantic and keyword retrieval)
-4. Post-generation citation stripping and refusal on zero verifiable citations
-5. Quiz validation pipeline rules V1 through V6 and end-to-end quiz lifecycle
-"""
+"""Document upload, retrieval access, citation handling and quiz-generation tests."""
 from __future__ import annotations
 
 import hashlib
