@@ -101,7 +101,7 @@ The source review inspected the README, Docker and environment configuration, ba
 | UX and learner workflow | 10 | 7 | Coherent custom design and role dashboards; multilingual, hands-on labs and complete course-learning feedback loop remain limited |
 | Security and privacy | 10 | 7 | Strong RBAC, upload controls and SQL retrieval filters; production cookie default, outbound AI data policy and path containment required hardening |
 | Architecture and maintainability | 5 | 4 | Modular monolith is appropriate for the team; architecture is reasonably separated |
-| Testing and quality evidence | 10 | 8 | Reported 102 tests cover important flows; this review did not rerun them, and Docker/E2E/dependency checks remain outstanding |
+| Testing and quality evidence | 10 | 8 | Initial baseline assessment used the then-reported 102 tests; follow-up CI now passes 109 backend tests, Docker builds, dependency audits, clean Compose startup and four-role browser smoke journeys |
 | Demonstration readiness | 3 | 2 | Many core workflows can be demonstrated from the documented implementation; external AI and government integrations must be presented honestly |
 | Evidence and claims discipline | 2 | 1 | Evidence-status distinctions are a strength; some README claims about citations and shared demo credentials needed correction |
 | **Total** | **100** | **72** | **Strong prototype foundation; key ecosystem requirements and production verification remain material gaps** |
