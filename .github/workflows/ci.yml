@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Keep only the newest validation run for each branch or pull request.
+concurrency:
+  group: pramana-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backend-tests:
     name: Backend tests (PostgreSQL + pgvector)
