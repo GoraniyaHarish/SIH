@@ -1,8 +1,4 @@
-"""Authentication and session security.
-
-Every assertion here was derived from the actual implementation in
-`app/api/routers/auth.py` and `app/core/security.py`, not from an assumed design.
-"""
+"""Authentication, session management and password handling."""
 from __future__ import annotations
 
 from tests.conftest import TEST_PASSWORD
