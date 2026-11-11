@@ -49,7 +49,9 @@ try {
     await page.getByRole('button', { name: 'Sign in', exact: true }).click()
     await page.waitForURL((url) => url.pathname === '/app', { timeout: 15000 })
     await page.locator('.topbar h1').waitFor()
-    if ((await page.locator('.topbar h1').textContent())?.trim() !== 'Dashboard') {\n      throw new Error(`${scenario.role}: dashboard did not render`)\n    }
+    if ((await page.locator('.topbar h1').textContent())?.trim() !== 'Dashboard') {
+      throw new Error(`${scenario.role}: dashboard did not render`)
+    }
 
     const staffLink = page.getByRole('link', { name: 'Training intelligence' })
     const adminLink = page.getByRole('link', { name: 'Admin workspace' })
@@ -64,7 +66,9 @@ try {
       await page.goto(`${baseURL}${route}`, { waitUntil: 'domcontentloaded' })
       if (scenario.role !== 'admin' && route === '/app/analytics') {
         await page.locator('.topbar h1').waitFor()
-        if ((await page.locator('.topbar h1').textContent())?.trim() !== 'Training intelligence') {\n          throw new Error(`${scenario.role}: analytics page did not render`)\n        }
+        if ((await page.locator('.topbar h1').textContent())?.trim() !== 'Training intelligence') {
+          throw new Error(`${scenario.role}: analytics page did not render`)
+        }
       } else if (scenario.role === 'admin') {
         const expected = {
           '/app/admin': 'Admin workspace',
@@ -73,7 +77,9 @@ try {
           '/app/admin/integrations': 'Integrations & system',
         }[route]
         await page.locator('.topbar h1').waitFor()
-        if ((await page.locator('.topbar h1').textContent())?.trim() !== expected) {\n          throw new Error(`${scenario.role}: ${route} did not render the expected page`)\n        }
+        if ((await page.locator('.topbar h1').textContent())?.trim() !== expected) {
+          throw new Error(`${scenario.role}: ${route} did not render the expected page`)
+        }
       } else {
         await page.getByRole('heading').first().waitFor()
       }
