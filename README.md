@@ -32,11 +32,11 @@ It is deliberately **not** a generic LMS, a generic chatbot, or a generic admin 
 | Automated tests | **102 passed** (`pytest tests/` — auth, RBAC/IDOR, gap engine, malicious uploads, pgvector RAG SQL isolation, citation stripping, quiz validation V1–V6) |
 | Frontend | `tsc --noEmit` clean, `vite build` OK (191 kB main / 62 kB gzip) |
 
-**AI mode note.** In the sandbox the API process was started without AI env vars, so the assistant
-correctly fell back to *extractive* mode (verbatim passages + real citations) instead of failing.
-Set `AI_BASE_URL` / `AI_API_KEY` (mapped from `OPENAI_BASE_URL` / `OPENAI_API_KEY` here) to enable
-LLM answers. LLM chat and `text-embedding-3-small` were both verified reachable (HTTP 200) during
-build; embeddings are what populate pgvector.
+**AI mode note.** External AI processing is disabled by default. With `AI_SEND_DOCUMENTS_EXTERNALLY=false`,
+source text and user queries are not sent to an external embedding or chat provider; the assistant
+uses local keyword retrieval and extractive passages. Enable outbound processing only after an
+explicit data-sharing decision and provider review. Set `AI_BASE_URL` / `AI_API_KEY` to configure
+a compatible provider; configuration alone does not constitute government approval.
 
 ---
 
@@ -72,15 +72,9 @@ cd backend && export PYTHONPATH=.
 cd frontend && npm install && npm run dev     # http://localhost:3000
 ```
 
-### Demonstration accounts (password `Pramana#2026`)
+### Demonstration accounts
 
-| Role | Email | Use it to see |
-|---|---|---|
-| Administrator | `admin@pramana.gov.in` | users, framework governance, integrations, audit |
-| Assessor | `assessor@pramana.gov.in` | review queue, approve competencies |
-| Training Manager | `manager@pramana.gov.in` | department-scoped aggregate analytics |
-| Learner (ISS) | `learner.iss@pramana.gov.in` | 9 gaps, P1 priorities, RAG, quizzes |
-| Learner (JSO) | `learner.jso@pramana.gov.in` | larger gap profile |
+Seeded demonstration accounts are created by `backend/seed.py`. Do not publish or reuse shared demo passwords. For any shared deployment, create unique credentials, require password changes, and rotate any credentials that may previously have been exposed.
 
 ---
 
