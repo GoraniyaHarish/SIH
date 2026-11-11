@@ -1,8 +1,7 @@
-"""Idempotent seed: framework, courses, demo documents, and a demonstration cohort.
+"""Create the local demonstration framework, catalogue and user cohort.
 
-Every seeded artefact carries an explicit evidence_status. Demonstration accounts use documented
-passwords intended only for local evaluation; the seed refuses to run in production unless
-ALLOW_DEMO_SEED=1 is set explicitly.
+All seeded records are labelled as demonstration or provisional data. The caller must supply a
+private DEMO_PASSWORD; production seeding also requires an explicit override.
 """
 from __future__ import annotations
 
@@ -332,7 +331,7 @@ def seed_demo_documents(db, admin: User) -> list[Document]:
     return docs
 
 
-def seed_users(db, fw: FrameworkVersion, departments: dict[str, Department], admin_id) -> dict[str, User]:
+def seed_users(db, fw: FrameworkVersion, departments: dict[str, Department]) -> dict[str, User]:
     roles = {r.code: r for r in db.scalars(select(JobRole))}
     comp_by_code = {c.code: c for c in db.scalars(select(Competency))}
     users: dict[str, User] = {}
@@ -477,7 +476,7 @@ def main() -> int:
         db.commit()
 
         fw = seed_framework(db)
-        users = seed_users(db, fw, departments, None)
+        users = seed_users(db, fw, departments)
         admin = users["admin@pramana.gov.in"]
         seed_courses(db, admin)
         seed_demo_documents(db, admin)
@@ -493,7 +492,7 @@ def main() -> int:
             recalculated += 1
         db.commit()
         print(f"  learning plans: {recalculated}")
-        print("\nDemonstration sign-in (password for every seeded account): " + DEMO_PASSWORD)
+        print("\nUse the private DEMO_PASSWORD value you supplied when signing in. It is not echoed here.")
         for email, name, role, *_ in DEMO_USERS:
             print(f"  {role.value:<9} {email:<34} {name}")
         print("\nSeed complete.")
