@@ -1,26 +1,20 @@
-/* ============================================================================
-   PRAMANA design system
-   Visual concept: a printed statistical instrument. Archival paper ground,
-   hairline rules, registration marks, graph-paper substrate, and a five-segment
-   proficiency ladder instead of percentage bars — because proficiency is a
-   discrete, defined scale, not an arbitrary score.
-   ========================================================================== */
+/* PRAMANA interface styles */
 
-/* ---------------------------------------------------------------- tokens */
+/* Design tokens */
 :root {
-  /* Ground: warm archival paper, not white */
+  /* Surfaces */
   --paper: #f6f2e9;
   --paper-2: #efeadf;
   --paper-3: #e6e0d1;
   --card: #fdfbf6;
 
-  /* Ink */
+  /* Text */
   --ink: #1a2130;
   --ink-2: #3c4557;
   --ink-3: #6b7486;
   --ink-4: #96a0b0;
 
-  /* Accents — deliberately chosen, not a generic gradient pair */
+  /* Accent colours */
   --teal: #0d6b60;
   --teal-deep: #084a43;
   --teal-wash: #e2efeb;
@@ -47,7 +41,7 @@
   --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
 
-  /* Geometry — small radii read as printed, not app-store */
+  /* Layout and spacing */
   --r-sm: 3px;
   --r: 5px;
   --r-lg: 8px;
@@ -74,7 +68,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Graph-paper substrate: the platform's signature background */
+/* Subtle page grid */
 body::before {
   content: '';
   position: fixed;
@@ -635,7 +629,7 @@ input:disabled, select:disabled, textarea:disabled { background: var(--paper-2);
 .opt[data-state='correct'] .l { background: var(--met); color: #fff; }
 .opt[data-state='wrong'] .l { background: var(--critical); color: #fff; }
 
-/* ---------------------------------------------------------------- misc */
+/* Utilities */
 .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .split { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 18px; }
