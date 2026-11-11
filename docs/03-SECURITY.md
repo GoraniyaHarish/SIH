@@ -36,25 +36,28 @@ does not establish compliance with any regulation. Items under “Unverified” 
 - Failure is never silent: provider down ⇒ `mode=extractive` with citations, or a refusal. Quiz
   generation falls back to a deterministic cloze generator flagged `extractive_fallback`.
 
-## What was actually verified at runtime
+## What has been verified
 
-- `/api/health` reports `database: ok`, `redis: ok`, integrations `not_configured` (truthful negative).
-- Successful login issues a token; `/me/gaps` returns a computed analysis (70.8% readiness, 9 gaps,
-  7 critical) — no fabricated figures.
-- `/assistant/ask` returned `mode=extractive`, `grounded=true`, 3 citations anchored to a real
-  document with page numbers.
-- Frontend `tsc --noEmit` clean; production build succeeds.
+- CI builds both Docker images and starts a fresh production-mode Compose stack.
+- The database migration, API/database/Redis health checks, SPA route and API proxy checks pass.
+- Playwright role journeys pass for learner, manager, assessor and administrator; non-admin access
+  to admin routes is denied.
+- The backend suite reports 109 passing tests. Frontend typecheck and production build pass.
+- Dependency audits report no known Python vulnerabilities and zero production npm vulnerabilities.
+- iGOT Karmayogi and NSSTA are verified as `not_configured`, not live integrations.
+
+See `docs/04-TEST-REPORT.md` for the tested commit and run details.
 
 ## Unverified / requires deployment-level review
 
-1. **Automated test coverage.** `backend/tests/` now holds **102 passing tests** covering
+1. **Automated test coverage.** `backend/tests/` now holds **109 passing tests** covering
    authentication (17), RBAC/IDOR (29), the gap engine (30), and malicious-upload handling,
    prompt-injection detection/fencing, SQL-level pgvector RAG cross-user isolation, citation
    stripping, and quiz validation rules V1–V6 (26) — see `docs/04-TEST-REPORT.md`. Writing and
    expanding the suite found and fixed **seven** real application defects (including a JSONB
    in-place mutation bug that caused shuffled quiz attempts to be mis-scored). **Still not
    automated:** live adversarial LLM jailbreak evaluation against an external model and dependency
-   auditing (`pip-audit` / `npm audit`).
+   auditing (`pip-audit` and `npm audit --omit=dev`) are now required CI jobs.
 2. No penetration test, no fuzzing of the PDF/DOCX parsers, no adversarial corpus.
 3. Prompt-injection resistance has one regex-based detector and a structural fence; it has **not**
    been tested against a determined attacker.
@@ -71,6 +74,6 @@ does not establish compliance with any regulation. Items under “Unverified” 
 ## Deliberate non-goals
 
 No password-reset email flow (would need SMTP and a token store). No MFA. No SSO. No data
-residency controls. No automated dependency-vulnerability gate in CI. No formal DPIA — the app
+residency controls. Dependency audits run in CI; this does not replace ongoing review of advisories or a full software supply-chain assessment. No formal DPIA — the app
 minimises personal data (no address, no DOB, IPs are HMAC-pseudonymised) but has not been assessed
 against any specific statute.
