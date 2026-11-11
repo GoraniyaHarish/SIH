@@ -42,7 +42,7 @@ does not establish compliance with any regulation. Items under “Unverified” 
 - The database migration, API/database/Redis health checks, SPA route and API proxy checks pass.
 - Playwright role journeys pass for learner, manager, assessor and administrator; non-admin access
   to admin routes is denied.
-- The backend suite reports 109 passing tests. Frontend typecheck and production build pass.
+- The backend suite reports 111 passing tests. Frontend typecheck and production build pass.
 - Dependency audits report no known Python vulnerabilities and zero production npm vulnerabilities.
 - iGOT Karmayogi and NSSTA are verified as `not_configured`, not live integrations.
 
@@ -50,7 +50,7 @@ See `docs/04-TEST-REPORT.md` for the tested commit and run details.
 
 ## Unverified / requires deployment-level review
 
-1. **Automated test coverage.** The backend suite reports **109 passing tests** across
+1. **Automated test coverage.** The backend suite reports **111 passing tests** across
    authentication, role and resource authorization, competency-gap calculations, document upload,
    retrieval isolation, citation handling and quiz generation/attempts. The test report records the
    tested commit and CI run. Dependency audits are also required CI jobs. Live adversarial LLM
