@@ -147,6 +147,9 @@ def test_password_change_invalidates_existing_access_tokens(client, fixture_data
         json={"current_password": TEST_PASSWORD, "new_password": "Rotated#2026x"},
     )
     assert changed.status_code == 204
+    cleared_cookies = " ".join(changed.headers.get_list("set-cookie")).lower()
+    assert "pramana_access=" in cleared_cookies and "max-age=0" in cleared_cookies
+    assert "pramana_refresh=" in cleared_cookies and "max-age=0" in cleared_cookies
 
     # token_version was bumped, so the old access token and refresh token are both dead.
     assert client.get("/api/auth/me", headers=headers).status_code == 401
