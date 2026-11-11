@@ -7,28 +7,28 @@ if (!password || password.length < 12) throw new Error('A private CI demo passwo
 const cases = [
   {
     role: 'learner',
-    email: 'learner.iss@pramana.gov.in',
+    email: 'learner.iss@pramana.test',
     staff: false,
     admin: false,
     routes: ['/app/gaps', '/app/courses', '/app/assessment'],
   },
   {
     role: 'manager',
-    email: 'manager@pramana.gov.in',
+    email: 'manager@pramana.test',
     staff: true,
     admin: false,
     routes: ['/app/analytics'],
   },
   {
     role: 'assessor',
-    email: 'assessor@pramana.gov.in',
+    email: 'assessor@pramana.test',
     staff: true,
     admin: false,
     routes: ['/app/analytics'],
   },
   {
     role: 'admin',
-    email: 'admin@pramana.gov.in',
+    email: 'admin@pramana.test',
     staff: true,
     admin: true,
     routes: ['/app/admin', '/app/admin/users', '/app/admin/framework', '/app/admin/integrations'],
