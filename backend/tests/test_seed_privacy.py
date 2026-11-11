@@ -2,7 +2,7 @@
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-import app.seed as seed
+import seed
 
 
 class _Rows:
