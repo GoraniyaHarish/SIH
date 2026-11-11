@@ -309,7 +309,9 @@ def seed_demo_documents(db, admin: User) -> list[Document]:
         db.add_all(rows)
         db.flush()
 
-        if ai.enabled:
+        # Seeding must obey the same outbound-data policy as normal ingestion.
+        # A configured provider is not permission to transmit document text.
+        if ai.enabled and settings.ai_send_documents_externally:
             try:
                 for start in range(0, len(rows), 16):
                     batch = rows[start:start + 16]
