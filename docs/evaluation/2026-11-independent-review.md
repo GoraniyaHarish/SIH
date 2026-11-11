@@ -137,6 +137,7 @@ The source review inspected the README, Docker and environment configuration, ba
 | External AI document sharing was enabled by default | Default is false; ingestion does not send document chunks for embeddings unless enabled; RAG does not send query text for embeddings unless explicitly allowed | Static diff reviewed; test coverage still needed |
 | README contained shared demo credentials; seed script contained a hard-coded shared password | Removed password/table from README; seed now requires a unique `DEMO_PASSWORD` environment variable of at least 12 characters before database writes | Static diff reviewed; seed execution not run |
 | README overstated citation verification | Clarified that source-ID validation does not establish semantic entailment | Documentation change reviewed |
+| Demo seeding bypassed the outbound-AI opt-in when an AI provider was configured | Updated `seed_demo_documents()` to require both provider availability and `AI_SEND_DOCUMENTS_EXTERNALLY=true` before embedding demo document text | Static source change reviewed; regression test/runtime execution still pending |
 
 ### Security caveat
 
