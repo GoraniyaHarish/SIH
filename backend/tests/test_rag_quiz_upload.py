@@ -11,6 +11,7 @@ These close the five remaining untested categories documented in docs/04-TEST-RE
 from __future__ import annotations
 
 import hashlib
+import re
 import uuid
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -568,7 +569,7 @@ class TestQuizValidationRulesAndLifecycle:
         candidates = [
             word.strip(".,;:()")
             for word in sentence.split()
-            if len(__import__("re").sub(r"[^A-Za-z]", "", word)) >= 7
+            if len(re.sub(r"[^A-Za-z]", "", word)) >= 7
             and word.lower().strip(".,;:()") not in quizgen._STOPWORDS
         ]
         term = candidates[len(candidates) // 2]
