@@ -79,14 +79,15 @@ export default function Login() {
         </div>
 
         <div>
-          <blockquote>
-            &ldquo;Capacity building in official statistics fails quietly when nobody knows which
-            competency is actually missing.&rdquo;
-          </blockquote>
-          <p className="small muted" style={{ maxWidth: '34ch', marginTop: 16 }}>
-            PRAMANA makes the missing competency explicit, ranks it against the requirements of a
-            real statistical job role, and attaches evidence to every level it reports.
-          </p>
+          <div>
+            <h2 className="display" style={{ fontSize: 30, maxWidth: '12ch' }}>
+              Build skills around the work your role requires.
+            </h2>
+            <p className="small muted" style={{ maxWidth: '34ch', marginTop: 16 }}>
+              Assessments, learning recommendations and source-linked study material are brought
+              together in one workspace.
+            </p>
+          </div>
         </div>
 
         <div>
