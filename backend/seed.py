@@ -1,7 +1,7 @@
-"""Create the local demonstration framework, catalogue and user cohort.
+"""Create the local framework, sample catalogue and demonstration user cohort.
 
-All seeded records are labelled as demonstration or provisional data. The caller must supply a
-private DEMO_PASSWORD; production seeding also requires an explicit override.
+Framework records are provisional; sample courses, documents and accounts are demonstration data.
+The caller must supply a private DEMO_PASSWORD. Production seeding requires an explicit override.
 """
 from __future__ import annotations
 
