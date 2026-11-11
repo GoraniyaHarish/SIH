@@ -533,7 +533,7 @@ class TestQuizValidationRulesAndLifecycle:
         assert not out.ok
         assert any(n.startswith("V4:") for n in out.notes)
 
-    def test_v5_and_v3_reject_non_verbatim_paraphrased_quote(self):
+    def test_v5_rejects_non_verbatim_paraphrased_quote(self):
         # Token overlap > 70% (passes token overlap check), but reordered so it is NOT a
         # verbatim substring of the passage -> caught by the verbatim substring check.
         item = self._valid_item()
@@ -543,7 +543,7 @@ class TestQuizValidationRulesAndLifecycle:
         )
         out = quizgen._validate_item(item, {"S1": self.PASSAGE}, set())
         assert not out.ok
-        assert any("not verbatim" in n for n in out.notes)
+        assert any(n.startswith("V5:") for n in out.notes)
 
     def test_v6_rejects_duplicate_question_stem_within_same_quiz(self):
         item = self._valid_item()
