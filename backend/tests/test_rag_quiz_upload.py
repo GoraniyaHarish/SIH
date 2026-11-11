@@ -143,6 +143,24 @@ class TestMaliciousUploads:
             ingest.file_path(evil_doc)
         assert exc_info.value.code == "path_traversal"
 
+    def test_document_content_is_not_sent_for_embeddings_without_opt_in(
+        self, client, api, fixture_data, monkeypatch
+    ):
+        monkeypatch.setattr(ingest.settings, "ai_send_documents_externally", False)
+        headers = api.headers("learner@example.com")
+        payload = make_text_document(topic="stratified sampling")
+        with (
+            patch.object(ingest.ai, "enabled", True),
+            patch.object(ingest.ai, "embed", side_effect=AssertionError("external embedding called")),
+        ):
+            response = upload(
+                client, headers, payload,
+                filename="private-training.txt", title="Private Training Notes",
+            )
+        assert response.status_code == 201
+        assert response.json()["status"] == "completed"
+        assert response.json()["chunk_count"] > 0
+
     def test_sibling_prefix_and_symlink_escape_are_rejected(self, tmp_path, monkeypatch):
         from types import SimpleNamespace
 
@@ -347,6 +365,29 @@ class TestRagChunkAuthorizationAndCitations:
         assert resp.grounded is False
         assert resp.citations == []
         assert "UniqueKeywordXylophone" not in resp.answer
+
+    def test_external_ai_disabled_keeps_query_local(
+        self, db, fixture_data, monkeypatch
+    ):
+        users = fixture_data["users"]
+        depts = fixture_data["departments"]
+        self._seed_embedded_doc(
+            db, users["learner"],
+            visibility=Visibility.PRIVATE.value,
+            department_id=depts["A"].id,
+            title="Local Calibration Notes",
+            content="Calibration weights reproduce known population totals exactly.",
+            vector=[1.0] + [0.0] * 1535,
+        )
+        monkeypatch.setattr(rag.settings, "ai_send_documents_externally", False)
+        with (
+            patch.object(rag.ai, "enabled", True),
+            patch.object(rag.ai, "embed", side_effect=AssertionError("external query embedding called")),
+        ):
+            response = rag.answer(db, users["learner"], "What does calibration do?")
+        assert response.mode == "extractive"
+        assert response.grounded is True
+        assert response.citations
 
     def test_llm_mode_strips_hallucinated_citations_and_refuses_when_ungrounded(
         self, db, fixture_data
