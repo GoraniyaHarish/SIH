@@ -44,7 +44,7 @@ services:
       DATABASE_URL: postgresql+psycopg://pramana:${POSTGRES_PASSWORD}@db:5432/pramana
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
-      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      COOKIE_SECURE: "true"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
       AI_BASE_URL: ${AI_BASE_URL:-}
       AI_API_KEY: ${AI_API_KEY:-}
