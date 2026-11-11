@@ -4,7 +4,7 @@
 **Repository:** `GoraniyaHarish/SIH`  
 **Reviewed baseline:** `main` at `1d54f2770b124f986bd28f22157764c3cbed90a2`  
 **Stabilization branch:** `pramana-judge-review-stabilization`  
-**Review status:** Static repository review plus targeted code changes. Runtime tests, Docker build and browser E2E have **not** been run in this review environment.
+**Review status:** Initial static review followed by targeted stabilization and successful GitHub Actions runtime verification on `pramana-judge-review-stabilization` (commit `23c0e630703670e9ce2fb37da40c3e852e79b6fd`). This verifies CI, not a live production deployment or independent penetration test.
 
 > This is an independent assessment rubric created for this review. It is not an official SIH marking scheme and does not predict selection or winning.
 
@@ -252,3 +252,47 @@ Do not claim live iGOT synchronization, official MoSPI competency approval, pred
 5. NSSTA documents / TPAC: https://nssta.gov.in/document
 6. NSSTA training offerings: https://nssta.gov.in/offerings
 7. PIB / MoSPI, Year-end review 2025: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2208162&lang=1&reg=3
+
+
+---
+
+## 10. Post-stabilization verification — 11 November 2026
+
+The following verification was completed by GitHub Actions run **42958974296** on the stabilization branch, with the corresponding pull-request run **42958980611** also completing successfully.
+
+| Verification | Result | Evidence |
+|---|---|---|
+| Backend suite against PostgreSQL + pgvector | **109 passed, 3 warnings** | Pytest summary: `109 passed, 3 warnings in 33.30s` |
+| Frontend typecheck and production build | **Passed** | CI job `Frontend typecheck and production build` |
+| Backend Docker image | **Built successfully** | CI job `Docker image builds` |
+| Frontend Docker image | **Built successfully** | CI job `Docker image builds` |
+| Python dependency audit | **No known vulnerabilities found** | `pip-audit -r backend/requirements.txt` |
+| Production frontend dependency audit | **0 vulnerabilities** | `npm audit --omit=dev` |
+| React Router security version | **7.18.5 verified** | Lockfile assertion in CI |
+| Clean Docker Compose deployment | **Passed** | Fresh DB and uploads volumes; production-mode Compose stack started |
+| Database migration | **Passed** | API startup ran Alembic; CI verified a non-empty `alembic_version` revision |
+| API and Redis readiness | **Passed** | `/api/health` returned database and Redis `ok` |
+| Web reverse proxy and SPA route | **Passed** | `/login` and proxied `/api/docs` responded successfully |
+| Government integration status | **Correctly not configured** | Health response asserted iGOT Karmayogi and NSSTA remain `not_configured` |
+| Browser learner journey | **Passed** | Login, dashboard, gaps, courses and assessment routes |
+| Browser manager journey | **Passed** | Login, staff navigation and analytics; admin route denied |
+| Browser assessor journey | **Passed** | Login, staff navigation and analytics; admin route denied |
+| Browser administrator journey | **Passed** | Login and admin workspace, people/roles, framework and integrations pages |
+| Browser runtime exceptions | **None observed** | Playwright reported all four journeys passed with no uncaught page exceptions |
+
+The CI Compose job created a fresh, random demonstration password at runtime, seeded only its isolated disposable database, and removed the Compose volumes at job end. No shared demonstration password is published by the current login UI or used as a CI default.
+
+### Additional security correction
+
+The frontend login page still contained a hard-coded shared demonstration password and clickable seeded-account shortcuts during the follow-up browser review. These have now been removed from the current stabilization branch. The page instead explains that demonstration accounts are provisioned separately for private evaluation. This does **not** remove the historical credential from old Git commits; treat it as compromised, rotate it, revoke sessions, and consider repository-history cleanup separately.
+
+### What this verification does not establish
+
+- It is not a live deployment, external load test, disaster-recovery test, or penetration test.
+- It does not establish TLS termination, production secret rotation, monitoring, backups, restore drills, or hosting hardening.
+- Browser journeys exercise the seeded CI cohort and key route permissions; they are not exhaustive exploratory testing of every control or workflow.
+- AI provider behaviour and semantic claim-to-citation entailment are not externally validated. Citation-ID checks must not be presented as proof that cited passages support every generated claim.
+- iGOT Karmayogi, NSSTA, government SSO and official competency-framework approval remain unavailable until the relevant authorizations, technical specifications and authoritative source material are obtained.
+- Previously exposed credentials may remain in Git history, forks, clones, caches or screenshots. The current source cleanup is not a substitute for rotation or history remediation.
+
+**Conclusion:** The stabilization branch now passes automated backend, frontend, dependency, container-build, clean Compose/migration and four-role browser smoke checks. It is materially more verifiable than the initial reviewed baseline and is suitable for a controlled prototype demonstration. Do not label it production-ready or claim government integrations are live until the remaining operational, security and authorization work is completed.
