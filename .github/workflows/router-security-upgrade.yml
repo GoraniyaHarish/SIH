@@ -1,0 +1,39 @@
+name: PRAMANA React Router security upgrade
+
+on:
+  push:
+    branches:
+      - pramana-judge-review-stabilization
+    paths:
+      - ".github/workflows/router-security-upgrade.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  update-lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: pramana-judge-review-stabilization
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Upgrade React Router to patched v7 release and regenerate lockfile
+        working-directory: frontend
+        run: npm install react-router-dom@7.18.5 --save-exact
+      - name: Commit generated dependency lock
+        run: |
+          if git diff --quiet -- frontend/package.json frontend/package-lock.json; then
+            echo "React Router lockfile already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/package.json frontend/package-lock.json
+          git commit -m "security(frontend): upgrade React Router to patched v7"
+          git push origin HEAD:pramana-judge-review-stabilization

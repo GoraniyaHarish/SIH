@@ -5,7 +5,7 @@ import secrets
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -56,7 +56,8 @@ class Settings(BaseSettings):
     ai_timeout_seconds: float = 60.0
     ai_max_retries: int = 2
     ai_requests_per_minute: int = 120
-    ai_send_documents_externally: bool = True  # explicit opt-in gate for outbound document text
+    # Document and query text are never sent to an external AI provider unless explicitly enabled.
+    ai_send_documents_externally: bool = False
 
     # --- RAG ---
     rag_min_similarity: float = 0.20
@@ -80,6 +81,14 @@ class Settings(BaseSettings):
     def _mkdir(cls, v: Path) -> Path:
         v.mkdir(parents=True, exist_ok=True)
         return v
+
+    @model_validator(mode="after")
+    def _validate_production_security(self) -> "Settings":
+        if self.is_production and not self.cookie_secure:
+            raise ValueError("COOKIE_SECURE=true is required when APP_ENV=production")
+        if self.is_production and "*" in self.origins:
+            raise ValueError("Wildcard ALLOWED_ORIGINS is not permitted in production")
+        return self
 
     @property
     def origins(self) -> list[str]:

@@ -4,15 +4,6 @@ import { api, ApiError, type User } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { Banner, Field, useToast } from '../components/ui'
 
-const DEMO_ACCOUNTS = [
-  { role: 'admin', email: 'admin@pramana.gov.in', name: 'Ananya Raghavan' },
-  { role: 'assessor', email: 'assessor@pramana.gov.in', name: 'Vikram Deshpande' },
-  { role: 'manager', email: 'manager@pramana.gov.in', name: 'Meera Krishnan' },
-  { role: 'learner', email: 'learner.iss@pramana.gov.in', name: 'Priya Nair' },
-  { role: 'learner', email: 'learner.jso@pramana.gov.in', name: 'Arun Sharma' },
-]
-const DEMO_PASSWORD = 'Pramana#2026'
-
 export default function Login() {
   const { login, user } = useAuth()
   const navigate = useNavigate()
@@ -73,13 +64,6 @@ export default function Login() {
     }
   }
 
-  function useDemo(demoEmail: string) {
-    setMode('login')
-    setEmail(demoEmail)
-    setPassword(DEMO_PASSWORD)
-    setError(null)
-  }
-
   return (
     <div className="auth-wrap">
       <section className="auth-art">
@@ -95,32 +79,25 @@ export default function Login() {
         </div>
 
         <div>
-          <blockquote>
-            &ldquo;Capacity building in official statistics fails quietly when nobody knows which
-            competency is actually missing.&rdquo;
-          </blockquote>
-          <p className="small muted" style={{ maxWidth: '34ch', marginTop: 16 }}>
-            PRAMANA makes the missing competency explicit, ranks it against the requirements of a
-            real statistical job role, and attaches evidence to every level it reports.
-          </p>
+          <div>
+            <h2 className="display" style={{ fontSize: 30, maxWidth: '12ch' }}>
+              Build skills around the work your role requires.
+            </h2>
+            <p className="small muted" style={{ maxWidth: '34ch', marginTop: 16 }}>
+              Assessments, learning recommendations and source-linked study material are brought
+              together in one workspace.
+            </p>
+          </div>
         </div>
 
         <div>
-          <p className="eyebrow" style={{ marginBottom: 8 }}>Demonstration sign-in</p>
-          <p className="tiny muted" style={{ marginTop: 0, marginBottom: 8 }}>
-            Password for every seeded account: <code className="mono">{DEMO_PASSWORD}</code>
-          </p>
-          <div className="demo-list">
-            {DEMO_ACCOUNTS.map((acc) => (
-              <button key={acc.email} className="demo-row" onClick={() => useDemo(acc.email)}
-                type="button">
-                <span className="role">{acc.role}</span>
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {acc.name}
-                </span>
-                <span className="mono tiny muted" style={{ fontSize: 10 }}>use →</span>
-              </button>
-            ))}
+          <div className="auth-note">
+            <p className="eyebrow" style={{ marginBottom: 8 }}>Institutional access</p>
+            <p className="small muted" style={{ margin: 0 }}>
+              Sign in with an account issued by your organisation. Demonstration accounts, when
+              enabled for a private evaluation, are provisioned separately and are never published
+              with shared credentials.
+            </p>
           </div>
         </div>
       </section>

@@ -17,8 +17,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Never run as root.
-RUN useradd --create-home useradd --create-home pramana \
+# Never run as root; create the upload directory before dropping privileges.
+RUN useradd --create-home pramana \
  && mkdir -p /srv/app/storage/uploads \
  && chown -R pramana:pramana /srv/app
 USER pramana

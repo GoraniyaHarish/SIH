@@ -1,8 +1,4 @@
-"""Authentication and session security.
-
-Every assertion here was derived from the actual implementation in
-`app/api/routers/auth.py` and `app/core/security.py`, not from an assumed design.
-"""
+"""Authentication, session management and password handling."""
 from __future__ import annotations
 
 from tests.conftest import TEST_PASSWORD
@@ -129,6 +125,9 @@ def test_logout_revokes_refresh_and_clears_cookies(client, fixture_data):
         "/api/auth/logout", headers={"Authorization": f"Bearer {access}"}
     )
     assert out.status_code == 204
+    cleared_cookies = " ".join(out.headers.get_list("set-cookie")).lower()
+    assert "pramana_access=" in cleared_cookies and "max-age=0" in cleared_cookies
+    assert "pramana_refresh=" in cleared_cookies and "max-age=0" in cleared_cookies
 
     assert client.post("/api/auth/refresh", cookies={"pramana_refresh": raw}).status_code == 401
 
@@ -147,6 +146,9 @@ def test_password_change_invalidates_existing_access_tokens(client, fixture_data
         json={"current_password": TEST_PASSWORD, "new_password": "Rotated#2026x"},
     )
     assert changed.status_code == 204
+    cleared_cookies = " ".join(changed.headers.get_list("set-cookie")).lower()
+    assert "pramana_access=" in cleared_cookies and "max-age=0" in cleared_cookies
+    assert "pramana_refresh=" in cleared_cookies and "max-age=0" in cleared_cookies
 
     # token_version was bumped, so the old access token and refresh token are both dead.
     assert client.get("/api/auth/me", headers=headers).status_code == 401

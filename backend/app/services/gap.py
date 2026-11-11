@@ -12,8 +12,8 @@ The scoring rule is fixed and documented so anyone can reproduce a learner's pri
     importance_weight  = 0.6 + 0.4 * (importance / 5)      -> 0.68 .. 1.00
     critical_multiplier = 1.35 for critical competencies else 1.0
     confidence_weight  = 0.85 + 0.15 * (confidence / 5)    -> down-weights low-confidence self-ratings
-    prerequisite_blocked = True when a prerequisite competency is itself deficient, in which case
-                       the item is ordered after fixing the prerequisite.
+    prerequisite_blocked = True when a prerequisite is below its declared minimum level; the
+                       dependent competency is then ordered after that prerequisite is addressed.
 
 Priority bands (P1 highest): P1 >= 2.2, P2 >= 1.4, P3 >= 0.7, P4 below.
 Assessment evidence from quizzes nudges the effective level (see `effective_level`), and the source
@@ -183,15 +183,17 @@ def compute(
             )
         )
 
-    # prerequisite blocking: a gap whose prerequisite is also deficient is deferred
-    defective = {row.competency_id: row.deficit for row in raw}
+    # Defer a competency only when its prerequisite is below the declared minimum level.
     code_by_id = {row.competency_id: row.code for row in raw}
     for row in raw:
-        for prereq_id, _min_level in prereq_map.get(row.competency_id, []):
-            if defective.get(prereq_id, 0) > 0:
+        for prereq_id, min_level in prereq_map.get(row.competency_id, []):
+            prerequisite_level, _ = effective_level(states.get(prereq_id))
+            if prerequisite_level < min_level:
                 row.prerequisite_blocked = True
                 prereq_code = code_by_id.get(prereq_id, "a prerequisite competency")
-                row.explanation += f" Deferred: prerequisite {prereq_code} is also deficient."
+                row.explanation += (
+                    f" Deferred: prerequisite {prereq_code} is below level {min_level}."
+                )
                 break
 
     gap_rows = [r for r in raw if r.deficit > 0]

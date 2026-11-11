@@ -136,20 +136,32 @@ def test_gap_computation_matches_hand_calculated_scores(db, fixture_data, seeded
     assert met.severity == "none"
 
 
-def test_gaps_are_ordered_by_priority_with_prerequisites_deferred(
+def test_prerequisite_uses_its_declared_minimum_level(
     db, fixture_data, seeded_learner
 ):
-    data = gap_service.compute(db, fixture_data["users"]["learner"])
+    learner = fixture_data["users"]["learner"]
+    data = gap_service.compute(db, learner)
     open_gaps = [row for row in data["items"] if row.deficit > 0]
-
-    # STAT.02 declares STAT.01 as a prerequisite, and STAT.01 is itself deficient.
     by_code = {row.code: row for row in open_gaps}
-    assert by_code["STAT.02"].prerequisite_blocked is True
-    assert "Deferred: prerequisite STAT.01" in by_code["STAT.02"].explanation
-    assert by_code["STAT.01"].prerequisite_blocked is False
 
-    # Unblocked rows come first, then descending priority.
+    # STAT.01 is below its role target of 5, but its level 3 meets STAT.02's prerequisite of 2.
+    assert by_code["STAT.02"].prerequisite_blocked is False
+    assert by_code["STAT.01"].prerequisite_blocked is False
     assert [row.code for row in open_gaps] == ["STAT.01", "DQ.01", "STAT.02"]
+
+    # Dropping STAT.01 below the prerequisite minimum must defer STAT.02.
+    state = db.query(CompetencyState).filter_by(
+        user_id=learner.id,
+        competency_id=fixture_data["competencies"]["STAT.01"].id,
+    ).one()
+    state.level = 1.0
+    db.flush()
+
+    deferred = gap_service.compute(db, learner)
+    deferred_by_code = {row.code: row for row in deferred["items"] if row.deficit > 0}
+    assert deferred_by_code["STAT.02"].prerequisite_blocked is True
+    assert "prerequisite STAT.01 is below level 2" in deferred_by_code["STAT.02"].explanation
+    assert deferred_by_code["STAT.01"].prerequisite_blocked is False
 
 
 def test_every_gap_row_explains_itself(db, fixture_data, seeded_learner):

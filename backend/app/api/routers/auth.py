@@ -187,7 +187,8 @@ def logout(
     db.commit()
     response.delete_cookie(ACCESS_COOKIE, path="/")
     response.delete_cookie(REFRESH_COOKIE, path="/api/auth")
-    return Response(status_code=204)
+    response.status_code = 204
+    return response
 
 
 @router.get("/me", response_model=UserOut)
@@ -269,4 +270,5 @@ def change_password(
     db.commit()
     response.delete_cookie(ACCESS_COOKIE, path="/")
     response.delete_cookie(REFRESH_COOKIE, path="/api/auth")
-    return Response(status_code=204)
+    response.status_code = 204
+    return response

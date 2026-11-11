@@ -66,13 +66,13 @@ export default function Landing() {
             Competency intelligence for <em>India&rsquo;s Official Statistical System</em>
           </h1>
           <p className="landing-lead">
-            PRAMANA starts from the competencies a statistical job role actually requires — not from
-            a list of available courses. Assess, find the exact gap, get an explainable pathway,
-            learn from source-grounded material, and prove progress with generated assessments.
+            PRAMANA links role requirements to competency assessments, identifies skill gaps and recommends
+            relevant learning. Learners can study uploaded material, attempt quizzes and reassess
+            their competencies.
           </p>
           <p className="landing-lead small muted">
-            Every level is traceable to the assessment method that produced it. Every AI answer is
-            tied to a page in the material you uploaded.
+            Each competency level records how it was assessed. Answers from the study assistant include
+            references to the material used; check those references against the source document.
           </p>
 
           <div className="row gap-8 mt-20 wrap">
@@ -135,8 +135,8 @@ export default function Landing() {
           <span className="n">03 / GROUNDED</span>
           <h3>Answers with provenance</h3>
           <p>
-            Retrieval is authorised in the database before any text reaches a model. Citations are
-            verified after generation; unsupported answers are withheld rather than guessed.
+            Document access is checked before retrieval. Citation references are checked against the passages
+            returned by the search; this does not replace checking whether a passage supports a claim.
           </p>
         </article>
         <article className="pillar">

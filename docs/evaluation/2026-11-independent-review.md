@@ -1,0 +1,299 @@
+# PRAMANA — Independent SIH 26101 Review & Stabilization
+
+**Review date:** 11 November 2026  
+**Repository:** `GoraniyaHarish/SIH`  
+**Reviewed baseline:** `main` at `1d54f2770b124f986bd28f22157764c3cbed90a2`  
+**Stabilization branch:** `pramana-judge-review-stabilization`  
+**Review status:** Initial static review followed by targeted stabilization and successful GitHub Actions verification on commit `e85017b363416999254553390d24908af917e028` (111 backend tests, frontend production build, dependency audits, Docker builds, clean Compose deployment and browser role journeys). This verifies CI, not a live production deployment or independent penetration test.
+
+> This is an independent assessment rubric created for this review. It is not an official SIH marking scheme and does not predict selection or winning.
+
+---
+
+## 1. Problem-statement research
+
+### 1.1 What SIH 26101 asks for
+
+The SIH 26101 listing identifies MoSPI and the Data Informatics & Innovation Division (DIID), under Software / Smart Education. Its stated purpose is an AI-enabled learning platform that identifies competency gaps, recommends personalized training through the iGOT Karmayogi ecosystem, and generates quizzes/MCQs from uploaded learning materials.
+
+The full problem description surfaced in the SIH 2026 problem-statement listing mirrored by an academic institution. The official SIH problem-statement directory is linked below, but the exact SIH 26101 record was not independently retrieved from the official portal during this review. Therefore, the full text is treated as **secondary-source transcription**, not as a directly verified official portal capture.
+
+Key requirements in that listing:
+
+- Create a comprehensive employee competency profile from designation, department, role, current assignment, qualifications, experience and previous training.
+- Assess competencies against a predefined Official Statistics framework.
+- Cover statistical, technical, digital-governance, behavioural and managerial competencies.
+- Identify competency gaps and recommend personalized pathways using role, experience, learning history, departmental priorities and future requirements.
+- Integrate with iGOT to retrieve course catalogues, recommend courses, monitor enrolment/completion and update competency scores.
+- Include NSSTA TPAC-recommended training programmes in the recommendation scope.
+- Provide AI virtual assistance, adaptive assessment, quizzes, feedback and multilingual learning support.
+- Generate MCQs and quizzes from uploaded learning material, including documents, presentations and videos.
+- Provide learner and administrator dashboards, including competencies, gaps, learning hours, training effectiveness, emerging skills and predictive insights.
+- Provide a secure, scalable, cloud-ready and interoperable application, including RBAC and SSO.
+
+### 1.2 Verified domain context from government sources
+
+- MoSPI's March 2025 statement on the Statistical Training Needs Assessment (STA) Survey says the survey evaluates the training ecosystem, identifies critical gaps—particularly in emerging areas—and prioritizes required skills. It also confirms NSSTA training in Official Statistics and advanced technologies such as AI, big data analytics and machine learning, with use of iGOT Karmayogi. Source: https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2114354&lang=2&reg=48
+- MoSPI's 22 October 2026 announcement describes a committee report on future-ready ISS capacity building aligned to Mission Karmayogi's competency-based framework. It describes role-linked competency-based capacity building across functional, domain and behavioural areas, with NSSTA as a key institutional anchor. Source: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2327053&lang=1&reg=3
+- NSSTA's public documents page lists TPAC meeting minutes and training-related documents. Source: https://nssta.gov.in/document
+- NSSTA's public offerings page lists induction and refresher training programmes. Source: https://nssta.gov.in/offerings
+- The official SIH 2026 problem-statement directory is https://sih.gov.in/sih2026PS
+
+**Important implication:** PRAMANA should not invent a generic skill framework and call it the approved MoSPI framework. It should provide provenance for each competency and map to approved role/capability frameworks only when the underlying documents are available and validated by domain experts. The newly announced MoSPI capacity-building report is highly relevant and should be acquired and mapped when its full report becomes publicly available.
+
+### 1.3 Problem interpretation
+
+The actual problem is not simply “make courses easier to find.” It is a workforce capability intelligence problem:
+
+1. Establish role and assignment context.
+2. Determine expected capability using an authoritative framework.
+3. Establish current capability using evidence, not only self-rating.
+4. Identify and explain gaps.
+5. Select suitable learning interventions from iGOT and NSSTA TPAC programmes.
+6. Monitor enrolment, participation and completion.
+7. Measure learning and capability change.
+8. Feed evidence back into the profile and next development plan.
+
+PRAMANA's differentiator should be the traceable connection between **role → expected competency → evidence-based gap → relevant training → reassessment → measurable improvement**.
+
+---
+
+## 2. Repository understanding
+
+The repository is a React/TypeScript/Vite frontend and a FastAPI/Python backend with PostgreSQL/pgvector, SQLAlchemy, Alembic, Redis support, a provider-neutral AI HTTP client, Docker Compose and backend tests.
+
+The source review inspected the README, Docker and environment configuration, backend API routers, authentication, configuration, database models, competency/gap/recommendation services, document ingestion, RAG, quiz generation and grading, integration adapters, seed script, test suite and architecture/security/test documentation. Follow-up CI also executed the backend suite, clean Compose deployment/migration and targeted browser journeys; this is still not exhaustive exploratory testing of every control.
+
+### Feature status matrix
+
+| SIH capability | Repository evidence | Assessment |
+|---|---|---|
+| Employee profile and role | User model, profile API, job-role and department relationships | **Partial** — role/department/designation exist; completeness against all requested profile attributes must be checked and expanded |
+| Competency framework | Versioned domains, competencies, skills, proficiency scale, role requirements and review workflow | **Implemented as a configurable/provisional framework**; not an officially approved MoSPI framework |
+| Competency assessment | Self, structured and assessor-reviewed assessment paths | **Implemented**; AI-based assessment should not be claimed merely because quiz generation uses AI |
+| Automated skill-gap analysis | Deterministic gap engine with documented priority formula and explanations | **Implemented** |
+| Personalized learning recommendations | Recommendation service and learning plans | **Implemented for available local catalogue**; quality and coverage depend on framework and catalogue provenance |
+| iGOT catalogue, enrolment and completion sync | Adapter boundary only; no verified authorized production API integration | **Not implemented as live integration** |
+| NSSTA TPAC programme recommendations | Generic NSSTA adapter boundary; no demonstrated TPAC programme catalogue mapping/sync | **Not implemented end to end** |
+| Upload-based MCQ/quiz generation | Document processing, quiz generation/validation, draft-review-publish-attempt-grade lifecycle | **Implemented**, with deterministic fallback clearly identified |
+| Grounded AI assistant | RAG, SQL access filters, citations, refusal path, keyword/extractive fallback | **Implemented with limitations**; citation ID validation is not proof of semantic entailment |
+| Learner/admin dashboards | Learner, manager and admin analytics routes and pages | **Implemented in current prototype**; predictive analytics and training-effectiveness attribution need stronger evidence |
+| Learning hours and course history | Learning/enrolment data and dashboard structures | **Partial** — validate data provenance and full SIH reporting semantics |
+| Multilingual learning | No verified complete multilingual workflow | **Not implemented / unverified** |
+| Virtual labs / hands-on modules | No verified sandbox or lab execution system | **Not implemented** |
+| SSO | No verified government SSO integration | **Not implemented** |
+| RBAC and access isolation | Backend role dependencies, scoped analytics, document access filters and tests | **Implemented and meaningfully tested in the reported suite** |
+| Production deployment | Dockerfiles, Compose, migrations and health checks exist | **Partial** — deployment has not been verified by a Docker build/start in this review |
+| Auditability | Audit service and audit records | **Implemented**, but production DB-level immutability and operational retention need work |
+
+---
+
+## 3. Independent judge assessment
+
+### Score: 72 / 100
+
+| Dimension | Max | Score | Reason |
+|---|---:|---:|---|
+| Problem alignment | 15 | 12 | The core role-to-gap-to-learning cycle is represented, but live iGOT and TPAC recommendations are central explicit requirements and are not delivered |
+| Competency intelligence | 15 | 11 | Versioned framework, evidence provenance, gap calculations and plans are a strong foundation; official framework validation and profile completeness remain open |
+| AI and assessment quality | 15 | 10 | RAG and quiz workflow are substantive; semantic citation support, external model evaluation and truly adaptive assessment need stronger proof |
+| iGOT / NSSTA ecosystem | 15 | 2 | Adapter boundaries are not the same as course catalogue, enrolment, completion or TPAC integration |
+| UX and learner workflow | 10 | 7 | Coherent custom design and role dashboards; multilingual, hands-on labs and complete course-learning feedback loop remain limited |
+| Security and privacy | 10 | 7 | Strong RBAC, upload controls and SQL retrieval filters; production cookie default, outbound AI data policy and path containment required hardening |
+| Architecture and maintainability | 5 | 4 | Modular monolith is appropriate for the team; architecture is reasonably separated |
+| Testing and quality evidence | 10 | 8 | Initial baseline assessment used the then-reported 102 tests; follow-up CI now passes 109 backend tests, Docker builds, dependency audits, clean Compose startup and four-role browser smoke journeys |
+| Demonstration readiness | 3 | 2 | Many core workflows can be demonstrated from the documented implementation; external AI and government integrations must be presented honestly |
+| Evidence and claims discipline | 2 | 1 | Evidence-status distinctions are a strength; some README claims about citations and shared demo credentials needed correction |
+| **Total** | **100** | **72** | **Strong prototype foundation; key ecosystem requirements and production verification remain material gaps** |
+
+### What is strongest
+
+1. Competency gap calculations are explainable rather than opaque.
+2. Assessment evidence has provenance labels; self-rating is not silently treated as verified expertise.
+3. The quiz lifecycle is more than a “generate questions” button: draft, validation, review, publish, attempt and bounded competency evidence are represented.
+4. Document authorization is enforced in the retrieval query path, not only in the UI.
+5. The integration status model is honest and does not fabricate iGOT or NSSTA success.
+6. The design system is distinct from a generic dark AI dashboard.
+
+### What could cause a judge to mark it down
+
+1. “Seamless iGOT integration” is not present as a live verified capability.
+2. NSSTA TPAC programmes are not demonstrably discoverable and recommended as actual programmes.
+3. A provisional framework is not an approved Official Statistics competency framework.
+4. AI-based competency assessment is not fully demonstrated; deterministic gap scoring and AI MCQ generation are different capabilities.
+5. Predictive analytics, multilingual support, virtual labs and SSO are not evidenced as working end-to-end.
+6. The initial static review had no runtime evidence. Follow-up CI now verifies a clean Compose startup, database migration, API readiness and four role journeys, but not a live production deployment.
+7. Citation markers are checked against retrieved source IDs, but that does not prove that each claim is entailed by its cited passage.
+
+---
+
+## 4. Confirmed code-level findings and changes on the stabilization branch
+
+| Finding on baseline | Change made on stabilization branch | Verification status |
+|---|---|---|
+| Backend Dockerfile had duplicated `useradd --create-home` command | Corrected to one user creation command; upload directory is created and ownership assigned before switching to non-root user | Backend and frontend Docker images built successfully in CI; clean Compose deployment also passed |
+| File containment used string-prefix comparison, which can accept sibling-prefix paths | Uses resolved `Path.is_relative_to(root)` and rejects root itself; added tests for sibling-prefix and symlink escapes | Regression tests included in the 109-test suite, which passed; clean Compose deployment passed |
+| Production cookie default was insecure; Compose default was false | Production settings now reject insecure cookies and wildcard CORS; Compose defaults secure cookies to true | 109-test suite and production-mode Compose startup passed |
+| External AI document sharing was enabled by default | Default is false; ingestion does not send document chunks for embeddings unless enabled; RAG does not send query text for embeddings unless explicitly allowed | 109-test suite passed; no external AI provider was configured, so real outbound provider transmission was not exercised |
+| README contained shared demo credentials; seed script contained a hard-coded shared password | Removed shared password from README, seed defaults and frontend login UI; seed requires a unique `DEMO_PASSWORD` of at least 12 characters | CI seeded disposable demo accounts with a generated private password; browser journeys passed |
+| README overstated citation verification | Clarified that source-ID validation does not establish semantic entailment | Documentation change reviewed |
+| Demo seeding bypassed the outbound-AI opt-in when an AI provider was configured | Updated `seed_demo_documents()` to require both provider availability and `AI_SEND_DOCUMENTS_EXTERNALLY=true` before embedding demo document text | Seed privacy regression test and CI seed execution passed; no external AI provider was configured |
+
+### Security caveat
+
+Removing a credential from the current README and seed source does **not** erase it from previous Git commits, clones, forks or screenshots. Any credential that was previously exposed must be treated as compromised and rotated. Revoke existing sessions and refresh tokens for affected demo accounts where possible. Do not reuse the old demo password.
+
+### Important AI privacy boundary
+
+The external AI setting now defaults to false and gates both document embeddings and RAG query embeddings. The quiz generator already checks the same setting before invoking external generation. Keep this setting disabled unless the data-sharing decision, provider terms, data classification and approval process explicitly permit outbound content. A configured API key is not itself authorization to transmit official or personal data.
+
+---
+
+## 5. Priority roadmap
+
+### P0 — Stabilization and safety
+
+1. **Completed:** full backend suite passed on the stabilization branch (109 passed, 3 warnings).
+2. **Completed:** production configuration, outbound-AI opt-in and storage-containment regression coverage passed in the suite.
+3. **Completed:** `pip-audit` reported no known vulnerabilities; `npm audit --omit=dev` reported 0 vulnerabilities; React Router 7.18.5 was verified.
+4. **Completed:** backend/frontend Docker builds and a fresh production-mode Compose deployment passed; Alembic migration, API health, PostgreSQL, Redis and web proxy checks passed.
+5. **Operational action still required:** rotate previously exposed demo credentials and revoke sessions. Current-source cleanup does not remove old Git history.
+6. **Deployment action still required:** verify the actual production reverse proxy uses HTTPS and forwards headers only from trusted proxies. CI Compose is a smoke environment, not a TLS deployment.
+7. **Security review still required:** review refresh-cookie CSRF exposure in the intended deployment model and add explicit CSRF protection if cross-site unsafe requests remain possible.
+
+### P1 — Close the SIH core gaps
+
+1. **Framework provenance:** add an importable framework source register with source URL, document/version, publication date, effective date, evidence status, approving authority and review history.
+2. **Official role mapping:** obtain the full MoSPI capacity-building committee report announced on 22 October 2026 and any approved competency framework; map role expectations only after source validation.
+3. **NSSTA TPAC:** create a TPAC programme catalogue model with programme title, target role/cadre, competency mapping, eligibility, delivery mode, schedule, source reference and publication date. Start with manually curated, source-cited public records; label them as public-source catalogue entries, not live integration.
+4. **iGOT connector:** implement only against an authorized API specification and credentials. Until then, provide a clearly labelled external-course reference workflow rather than a simulated sync.
+5. **Evidence-based assessment:** distinguish self-assessment, structured assessment, assessor validation, course completion and demonstrated task evidence. Do not let course completion alone certify proficiency.
+6. **Learning outcome loop:** capture pre/post assessment, learning time, activity completion and assessor evidence, then show competency change with method and confidence.
+7. **Role profile completeness:** add assignment, qualifications, experience and previous training fields only with clear data minimization and authorization rules.
+
+### P2 — Competitive differentiators
+
+1. Recommendation explanations that show exactly which gap, role requirement and course competency mapping caused each recommendation.
+2. TPAC and iGOT recommendation ranking with fit, eligibility, recency and availability factors.
+3. Claim-level RAG support checks and adversarial evaluation sets; source-ID validity alone is insufficient.
+4. Multilingual interface/content support with language quality checks.
+5. A small, safe statistical coding lab (e.g. sandboxed Python/R exercises) only if execution isolation can be implemented securely.
+6. Cohort analytics with privacy suppression and defensible training-effectiveness metrics.
+7. Exportable individual development plans and administrator capacity-building reports.
+
+### P3 — Optional after core requirements
+
+- SSO once the target identity provider and authorization are documented.
+- AI provider failover.
+- Realtime assistant streaming.
+- More advanced predictive analytics, only after enough validated longitudinal data exists.
+
+---
+
+## 6. Recommended SIH demonstration narrative
+
+Demonstrate one learner journey with a real source and traceable evidence:
+
+1. Sign in as a learner and show the profile's role, department and evidence status.
+2. Open the role competency profile and show where the expected levels came from.
+3. Complete a structured assessment; distinguish self-declared values from assessor-verified values.
+4. Show the gap engine's formula, ranked gaps and explanations.
+5. Open a recommended local course or a clearly labelled NSSTA public-source TPAC programme entry.
+6. Upload a statistical learning document and show processing status.
+7. Ask the grounded assistant a question; open the cited page/chunk and explain the limits of citation verification.
+8. Generate a quiz, show validation, draft review and publish.
+9. Attempt the quiz and show score/explanation.
+10. Revisit the competency profile and show the bounded evidence update and new recommendation.
+11. Finish with the admin dashboard, privacy suppression and honest integration status.
+
+Do not claim live iGOT synchronization, official MoSPI competency approval, predictive accuracy or government compliance unless independently evidenced.
+
+---
+
+## 7. Judge questions to prepare
+
+- What is the difference between PRAMANA and iGOT Karmayogi itself?
+- How do you know the required competency level for a role?
+- Who approves the competency framework?
+- How is self-assessment distinguished from actual proficiency?
+- How do you prevent a high quiz score from falsely certifying expertise?
+- How does a recommendation map to a competency gap?
+- How will you recommend an NSSTA TPAC programme?
+- What happens when iGOT APIs or credentials are unavailable?
+- How do you ensure an employee cannot retrieve another employee's private documents?
+- What evidence proves that an AI answer is supported by a source?
+- What data is sent to the external AI provider?
+- How will the system measure actual improvement rather than course completion?
+- Which features are live, provisional, simulated or not implemented?
+
+---
+
+## 8. Verification record and limitations
+
+- CI workflow: `.github/workflows/ci.yml`. Latest fully green code-verification run: **42958974296** (push) and **42958980611** (pull request), on commit `23c0e630703670e9ce2fb37da40c3e852e79b6fd`. Documentation was subsequently updated in commit `a283e68bd4df59f5b0666a7fc91189f615c74446`; that docs-only commit triggered a fresh CI run.
+- Backend tests against PostgreSQL + pgvector: **109 passed, 3 warnings in 33.30s**. The warnings are non-failing Starlette/httpx and legacy status-constant deprecations.
+- Frontend typecheck and production build passed.
+- Backend and frontend Docker images built successfully.
+- Python dependency audit: `No known vulnerabilities found`. Production frontend audit: `found 0 vulnerabilities`. Lockfile check: `react-router-dom 7.18.5`.
+- Clean Compose test used a fresh disposable PostgreSQL volume and production-mode settings. API startup completed Alembic migration; CI verified the schema revision exists. The health endpoint reported PostgreSQL and Redis as `ok`; the web SPA and Nginx API proxy checks passed.
+- CI seeded only disposable demo accounts with a random masked password and deleted the database/uploads volumes at job end. No shared demo password is a CI default.
+- Playwright browser checks passed for learner, manager, assessor and administrator. Learner core routes, manager/assessor analytics, administrator pages and admin-route denial for non-admin roles were exercised. All four journeys passed with no uncaught browser exceptions.
+- CI explicitly asserted AI is `not_configured` and iGOT Karmayogi/NSSTA remain `not_configured`; no simulated success or unauthorized integration is claimed.
+- These checks are not an exhaustive penetration test, external load test, live production deployment, disaster-recovery test or full exploratory test of every control.
+- The official SIH portal's exact SIH 26101 record was not independently retrieved in this review; the problem text was corroborated through a secondary listing. Reconfirm the original portal record before final presentation.
+- Previously exposed credentials must be rotated and affected sessions revoked. Removing them from current files does not erase Git history, clones, forks or screenshots.
+- No official approval of PRAMANA's provisional competency framework, live iGOT/NSSTA integration or government SSO is claimed.
+
+## 9. Sources
+
+1. SIH 2026 official problem-statement directory: https://sih.gov.in/sih2026PS
+2. SIH 26101 secondary listing/transcription: https://sih2026.vuce.in/ps/SIH26101
+3. PIB / MoSPI, “STA Survey Report”, 24 March 2025: https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2114354&lang=2&reg=48
+4. PIB / MoSPI, “Towards Future-Ready Data Leaders: Comprehensive Capacity Building recommendations by Committee in MoSPI”, 22 October 2026: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2327053&lang=1&reg=3
+5. NSSTA documents / TPAC: https://nssta.gov.in/document
+6. NSSTA training offerings: https://nssta.gov.in/offerings
+7. PIB / MoSPI, Year-end review 2025: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2208162&lang=1&reg=3
+
+
+---
+
+## 10. Post-stabilization verification — 11 November 2026
+
+The following verification was completed by GitHub Actions run **42958974296** on the stabilization branch, with the corresponding pull-request run **42958980611** also completing successfully.
+
+| Verification | Result | Evidence |
+|---|---|---|
+| Backend suite against PostgreSQL + pgvector | **109 passed, 3 warnings** | Pytest summary: `109 passed, 3 warnings in 33.30s` |
+| Frontend typecheck and production build | **Passed** | CI job `Frontend typecheck and production build` |
+| Backend Docker image | **Built successfully** | CI job `Docker image builds` |
+| Frontend Docker image | **Built successfully** | CI job `Docker image builds` |
+| Python dependency audit | **No known vulnerabilities found** | `pip-audit -r backend/requirements.txt` |
+| Production frontend dependency audit | **0 vulnerabilities** | `npm audit --omit=dev` |
+| React Router security version | **7.18.5 verified** | Lockfile assertion in CI |
+| Clean Docker Compose deployment | **Passed** | Fresh DB and uploads volumes; production-mode Compose stack started |
+| Database migration | **Passed** | API startup ran Alembic; CI verified a non-empty `alembic_version` revision |
+| API and Redis readiness | **Passed** | `/api/health` returned database and Redis `ok` |
+| Web reverse proxy and SPA route | **Passed** | `/login` and proxied `/api/docs` responded successfully |
+| Government integration status | **Correctly not configured** | Health response asserted iGOT Karmayogi and NSSTA remain `not_configured` |
+| Browser learner journey | **Passed** | Login, dashboard, gaps, courses and assessment routes |
+| Browser manager journey | **Passed** | Login, staff navigation and analytics; admin route denied |
+| Browser assessor journey | **Passed** | Login, staff navigation and analytics; admin route denied |
+| Browser administrator journey | **Passed** | Login and admin workspace, people/roles, framework and integrations pages |
+| Browser runtime exceptions | **None observed** | Playwright reported all four journeys passed with no uncaught page exceptions |
+
+The CI Compose job created a fresh, random demonstration password at runtime, seeded only its isolated disposable database, and removed the Compose volumes at job end. No shared demonstration password is published by the current login UI or used as a CI default.
+
+### Additional security correction
+
+The frontend login page still contained a hard-coded shared demonstration password and clickable seeded-account shortcuts during the follow-up browser review. These have now been removed from the current stabilization branch. The page instead explains that demonstration accounts are provisioned separately for private evaluation. This does **not** remove the historical credential from old Git commits; treat it as compromised, rotate it, revoke sessions, and consider repository-history cleanup separately.
+
+### What this verification does not establish
+
+- It is not a live deployment, external load test, disaster-recovery test, or penetration test.
+- It does not establish TLS termination, production secret rotation, monitoring, backups, restore drills, or hosting hardening.
+- Browser journeys exercise the seeded CI cohort and key route permissions; they are not exhaustive exploratory testing of every control or workflow.
+- AI provider behaviour and semantic claim-to-citation entailment are not externally validated. Citation-ID checks must not be presented as proof that cited passages support every generated claim.
+- iGOT Karmayogi, NSSTA, government SSO and official competency-framework approval remain unavailable until the relevant authorizations, technical specifications and authoritative source material are obtained.
+- Previously exposed credentials may remain in Git history, forks, clones, caches or screenshots. The current source cleanup is not a substitute for rotation or history remediation.
+
+**Conclusion:** The stabilization branch now passes automated backend, frontend, dependency, container-build, clean Compose/migration and four-role browser smoke checks. It is materially more verifiable than the initial reviewed baseline and is suitable for a controlled prototype demonstration. Do not label it production-ready or claim government integrations are live until the remaining operational, security and authorization work is completed.

@@ -127,7 +127,7 @@ Docker Compose (api + web + postgres/pgvector + redis), defined in `docker-compo
 exposed publicly; only the web container publishes a port. Alembic is the single migration path and
 runs in the API container's start command, before uvicorn binds.
 
-> **Execution status:** the Compose file is YAML-valid but has **never been brought up** — Docker is
-> not installed in the development sandbox where this project was built. The images, health checks
-> and startup ordering are unexecuted. The stack that *was* actually run is a native PostgreSQL 17
-> + Redis + uvicorn + Vite preview on the host (see `README.md`).
+> **Verification status:** GitHub Actions has built both images, started a clean production-mode
+> Compose stack, applied the Alembic migration, checked API/database/Redis health and exercised the
+> web application through Playwright role journeys. This is repeatable CI verification, not a
+> production deployment or an independent operational review. See `docs/04-TEST-REPORT.md`.

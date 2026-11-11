@@ -1,9 +1,10 @@
 # PRAMANA — competency intelligence platform for India's Official Statistical System.
 #
-# Usage:
-#   cp .env.example .env && edit JWT_SECRET   # required
+# Local setup:
+#   cp .env.example .env
+#   Set unique POSTGRES_PASSWORD and JWT_SECRET values in .env.
 #   docker compose up --build -d
-#   docker compose exec api python seed.py    # optional demonstration data
+#   docker compose exec -e ALLOW_DEMO_SEED=1 -e DEMO_PASSWORD='your-private-password' api python seed.py
 #   open http://localhost:3000
 #
 # The database image ships pgvector, so no extra extension image is required.
@@ -44,13 +45,13 @@ services:
       DATABASE_URL: postgresql+psycopg://pramana:${POSTGRES_PASSWORD}@db:5432/pramana
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
-      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      COOKIE_SECURE: "true"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
       AI_BASE_URL: ${AI_BASE_URL:-}
       AI_API_KEY: ${AI_API_KEY:-}
       AI_CHAT_MODEL: ${AI_CHAT_MODEL:-gpt-5-mini}
       AI_EMBEDDING_MODEL: ${AI_EMBEDDING_MODEL:-text-embedding-3-small}
-      AI_SEND_DOCUMENTS_EXTERNALLY: ${AI_SEND_DOCUMENTS_EXTERNALLY:-true}
+      AI_SEND_DOCUMENTS_EXTERNALLY: ${AI_SEND_DOCUMENTS_EXTERNALLY:-false}
       IGOT_BASE_URL: ${IGOT_BASE_URL:-}
       IGOT_API_TOKEN: ${IGOT_API_TOKEN:-}
       NSSTA_BASE_URL: ${NSSTA_BASE_URL:-}

@@ -1,16 +1,10 @@
-"""Tests for document upload security, prompt-injection fencing, chunk-level RAG authorization,
-citation verification, and MCQ validation rules V1-V6.
-
-These close the five remaining untested categories documented in docs/04-TEST-REPORT.md:
-1. Malicious upload handling (magic bytes, binary masquerade, invalid UTF-8, size cap, path traversal)
-2. Prompt-injection detection, quarantine flagging, and structural fencing
-3. Chunk-level RAG authorization inside SQL (both pgvector semantic and keyword retrieval)
-4. Post-generation citation stripping and refusal on zero verifiable citations
-5. Quiz validation pipeline rules V1 through V6 and end-to-end quiz lifecycle
-"""
+"""Document upload, retrieval access, citation handling and quiz-generation tests."""
 from __future__ import annotations
 
+import hashlib
+import re
 import uuid
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -142,6 +136,49 @@ class TestMaliciousUploads:
         with pytest.raises(doc_service.DocumentRejected) as exc_info:
             ingest.file_path(evil_doc)
         assert exc_info.value.code == "path_traversal"
+
+    def test_document_content_is_not_sent_for_embeddings_without_opt_in(
+        self, client, api, fixture_data, monkeypatch
+    ):
+        monkeypatch.setattr(ingest.settings, "ai_send_documents_externally", False)
+        headers = api.headers("learner@example.com")
+        payload = make_text_document(topic="stratified sampling")
+        with (
+            patch.object(ingest.ai, "enabled", True),
+            patch.object(ingest.ai, "embed", side_effect=AssertionError("external embedding called")),
+        ):
+            response = upload(
+                client, headers, payload,
+                filename="private-training.txt", title="Private Training Notes",
+            )
+        assert response.status_code == 201
+        assert response.json()["status"] == "completed"
+        assert response.json()["chunk_count"] > 0
+
+    def test_sibling_prefix_and_symlink_escape_are_rejected(self, tmp_path, monkeypatch):
+        from types import SimpleNamespace
+
+        root = tmp_path / "uploads"
+        sibling = tmp_path / "uploads-evil"
+        root.mkdir()
+        sibling.mkdir()
+        (sibling / "secret.txt").write_text("not in storage", encoding="utf-8")
+        monkeypatch.setattr(ingest.settings, "upload_dir", root)
+
+        sibling_escape = SimpleNamespace(stored_name="../uploads-evil/secret.txt")
+        with pytest.raises(doc_service.DocumentRejected) as sibling_error:
+            ingest.file_path(sibling_escape)
+        assert sibling_error.value.code == "path_traversal"
+
+        link = root / "linked"
+        try:
+            link.symlink_to(sibling, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            pytest.skip("Symlink creation is unavailable on this platform")
+        symlink_escape = SimpleNamespace(stored_name="linked/secret.txt")
+        with pytest.raises(doc_service.DocumentRejected) as symlink_error:
+            ingest.file_path(symlink_escape)
+        assert symlink_error.value.code == "path_traversal"
 
 
 # ==============================================================================
@@ -323,6 +360,29 @@ class TestRagChunkAuthorizationAndCitations:
         assert resp.citations == []
         assert "UniqueKeywordXylophone" not in resp.answer
 
+    def test_external_ai_disabled_keeps_query_local(
+        self, db, fixture_data, monkeypatch
+    ):
+        users = fixture_data["users"]
+        depts = fixture_data["departments"]
+        self._seed_embedded_doc(
+            db, users["learner"],
+            visibility=Visibility.PRIVATE.value,
+            department_id=depts["A"].id,
+            title="Local Calibration Notes",
+            content="Calibration weights reproduce known population totals exactly.",
+            vector=[1.0] + [0.0] * 1535,
+        )
+        monkeypatch.setattr(rag.settings, "ai_send_documents_externally", False)
+        with (
+            patch.object(rag.ai, "enabled", True),
+            patch.object(rag.ai, "embed", side_effect=AssertionError("external query embedding called")),
+        ):
+            response = rag.answer(db, users["learner"], "What does calibration do?")
+        assert response.mode == "extractive"
+        assert response.grounded is True
+        assert response.citations
+
     def test_llm_mode_strips_hallucinated_citations_and_refuses_when_ungrounded(
         self, db, fixture_data
     ):
@@ -467,7 +527,7 @@ class TestQuizValidationRulesAndLifecycle:
         assert not out.ok
         assert any(n.startswith("V4:") for n in out.notes)
 
-    def test_v5_and_v3_reject_non_verbatim_paraphrased_quote(self):
+    def test_v5_rejects_non_verbatim_paraphrased_quote(self):
         # Token overlap > 70% (passes token overlap check), but reordered so it is NOT a
         # verbatim substring of the passage -> caught by the verbatim substring check.
         item = self._valid_item()
@@ -477,7 +537,40 @@ class TestQuizValidationRulesAndLifecycle:
         )
         out = quizgen._validate_item(item, {"S1": self.PASSAGE}, set())
         assert not out.ok
-        assert any("not verbatim" in n for n in out.notes)
+        assert any(n.startswith("V5:") for n in out.notes)
+
+    def test_v5_rejects_a_quote_with_a_valid_prefix_and_unrelated_tail(self):
+        item = self._valid_item()
+        item["source_quote"] = self.PASSAGE + " An unrelated sentence was appended."
+        out = quizgen._validate_item(item, {"S1": self.PASSAGE}, set())
+        assert not out.ok
+        assert any(n.startswith("V5:") for n in out.notes)
+
+    def test_extractive_option_order_uses_a_stable_digest(self):
+        sentence = (
+            "Stratification divides a heterogeneous population into internally homogeneous "
+            "strata so that estimator variance is reduced without increasing the nominal sample size."
+        )
+        chunk = SimpleNamespace(content=sentence)
+        distractors = ["sampling", "weighting", "estimation"]
+        with patch.object(quizgen, "_pick_distractors", return_value=distractors):
+            items = quizgen._extractive_generate([chunk], 1)
+
+        assert len(items) == 1
+        candidates = [
+            word.strip(".,;:()")
+            for word in sentence.split()
+            if len(re.sub(r"[^A-Za-z]", "", word)) >= 7
+            and word.lower().strip(".,;:()") not in quizgen._STOPWORDS
+        ]
+        term = candidates[len(candidates) // 2]
+        base_options = [term, *distractors]
+        order = sorted(
+            range(4),
+            key=lambda index: hashlib.sha256(f"{term}:{index}".encode("utf-8")).digest(),
+        )
+        assert items[0]["options"] == [base_options[index] for index in order]
+        assert items[0]["correct_index"] == order.index(0)
 
     def test_v6_rejects_duplicate_question_stem_within_same_quiz(self):
         item = self._valid_item()

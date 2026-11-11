@@ -22,6 +22,7 @@ backend/storage/uploads/*
 *.db
 
 # Node
+*.tsbuildinfo
 node_modules/
 frontend/dist/
 dist/

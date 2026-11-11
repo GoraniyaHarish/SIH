@@ -55,8 +55,8 @@ export default function Assistant() {
       <div>
         <h2 className="display" style={{ fontSize: 26 }}>Study assistant</h2>
         <p className="small muted" style={{ margin: '4px 0 0' }}>
-          Answers are drawn only from material you are authorised to read, and every claim carries a
-          page citation you can verify.
+          Answers use material you are authorised to read. Check the cited pages in the original document
+          before relying on an answer.
         </p>
       </div>
 
@@ -103,7 +103,7 @@ export default function Assistant() {
               <li>Retrieval is filtered by your read permissions in the database first.</li>
               <li>Retrieved text is passed to the model as untrusted data, never as instructions.</li>
               <li>Citations that do not map to a retrieved passage are removed.</li>
-              <li>If the passage does not support an answer, the assistant says so.</li>
+              <li>The assistant may decline when it cannot retrieve suitable supporting passages.</li>
             </ul>
             <div className="mt-12"><EvidenceTag status="provisional" compact /></div>
           </Card>
@@ -200,7 +200,7 @@ export default function Assistant() {
               </button>
             </form>
             <p className="tiny muted" style={{ margin: '7px 0 0' }}>
-              Answers are limited to the selected sources. Nothing from outside your material is used.
+              Responses are intended to use the selected sources. Verify important details against the cited pages.
             </p>
           </div>
         </div>

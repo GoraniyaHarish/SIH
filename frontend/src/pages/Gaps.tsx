@@ -7,8 +7,6 @@ import {
 } from '../components/ui'
 import { IconArrow, IconInfo, IconRoute, IconTarget } from '../components/icons'
 
-const SEVERITY_ORDER = ['critical', 'high', 'moderate', 'low', 'none'] as const
-
 export default function Gaps() {
   const { data, error, loading, refetch } = useFetch<GapAnalysis>(() => api.get<GapAnalysis>('/me/gaps'))
   const [filter, setFilter] = useState<'all' | 'open' | 'critical' | 'met'>('open')
@@ -189,7 +187,6 @@ band: P1 ≥ 2.2 · P2 ≥ 1.4 · P3 ≥ 0.7 · P4 below`}</pre>
 }
 
 function GapRow({ item, open, onToggle }: { item: GapItem; open: boolean; onToggle: () => void }) {
-  const sevIndex = SEVERITY_ORDER.indexOf(item.severity)
   return (
     <article className="gap-item" data-blocked={item.prerequisite_blocked}
       style={{ flexDirection: 'column', gap: 10 }}>
@@ -256,7 +253,6 @@ function GapRow({ item, open, onToggle }: { item: GapItem; open: boolean; onTogg
           </div>
         </div>
       ) : null}
-      {sevIndex < 3 && item.deficit > 0 ? null : null}
     </article>
   )
 }
