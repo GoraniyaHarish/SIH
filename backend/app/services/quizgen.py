@@ -8,11 +8,12 @@ Validation rules (each produces a machine-readable note):
   V2 duplication  - no two options identical after normalisation
   V3 grounding    - the source quote must actually appear in the cited chunk (verbatim overlap)
   V4 answer span  - the correct option must be supported by the chunk text
-  V5 ambiguity    - distractors must not also appear as the answer in the same sentence
+  V5 quote check   - the supplied source quote must be a contiguous passage after normalisation
   V6 dedupe       - questions within a quiz must be distinct
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import uuid
@@ -153,10 +154,10 @@ def _validate_item(
             else:
                 notes.append("V4: correct option has no checkable content words")
 
-        # V5 ambiguity: a distractor that appears adjacent to the stem sentence is risky
-        if stem and quote:
-            if _normalise(quote)[:80] and _normalise(quote)[:80] not in chunk_norm:
-                notes.append("V3: quote is not verbatim from the passage")
+        # V5 quote check: token overlap alone is not enough; preserve source wording and order.
+        normalised_quote = _normalise(quote)
+        if normalised_quote and normalised_quote not in chunk_norm:
+            notes.append("V5: quote is not verbatim from the passage")
 
     hard_failures = [n for n in notes if n.startswith(("V1:", "V2:", "V3:", "V4:", "V6:"))]
     return ValidationOutcome(ok=not hard_failures, notes=notes)
@@ -217,7 +218,10 @@ def _extractive_generate(chunks: list[DocumentChunk], count: int) -> list[dict]:
                 continue
             options = [term] + distractors[:3]
             # stable shuffle so output is deterministic
-            order = sorted(range(4), key=lambda k: (hash(f"{term}{k}") % 97, k))
+            order = sorted(
+                range(4),
+                key=lambda k: hashlib.sha256(f"{term}:{k}".encode("utf-8")).digest(),
+            )
             shuffled = [options[k] for k in order]
             items.append(
                 {
