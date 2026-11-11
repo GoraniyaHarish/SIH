@@ -143,6 +143,31 @@ class TestMaliciousUploads:
             ingest.file_path(evil_doc)
         assert exc_info.value.code == "path_traversal"
 
+    def test_sibling_prefix_and_symlink_escape_are_rejected(self, tmp_path, monkeypatch):
+        from types import SimpleNamespace
+
+        root = tmp_path / "uploads"
+        sibling = tmp_path / "uploads-evil"
+        root.mkdir()
+        sibling.mkdir()
+        (sibling / "secret.txt").write_text("not in storage", encoding="utf-8")
+        monkeypatch.setattr(ingest.settings, "upload_dir", root)
+
+        sibling_escape = SimpleNamespace(stored_name="../uploads-evil/secret.txt")
+        with pytest.raises(doc_service.DocumentRejected) as sibling_error:
+            ingest.file_path(sibling_escape)
+        assert sibling_error.value.code == "path_traversal"
+
+        link = root / "linked"
+        try:
+            link.symlink_to(sibling, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            pytest.skip("Symlink creation is unavailable on this platform")
+        symlink_escape = SimpleNamespace(stored_name="linked/secret.txt")
+        with pytest.raises(doc_service.DocumentRejected) as symlink_error:
+            ingest.file_path(symlink_escape)
+        assert symlink_error.value.code == "path_traversal"
+
 
 # ==============================================================================
 # 2. Prompt-injection detection, quarantine flagging, and structural fencing
