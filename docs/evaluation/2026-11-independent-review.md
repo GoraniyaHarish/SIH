@@ -4,7 +4,7 @@
 **Repository:** `GoraniyaHarish/SIH`  
 **Reviewed baseline:** `main` at `1d54f2770b124f986bd28f22157764c3cbed90a2`  
 **Stabilization branch:** `pramana-judge-review-stabilization`  
-**Review status:** Initial static review followed by targeted stabilization and successful GitHub Actions verification on commit `44ae715f51cc00dfe3e3d53b757d85159b125287` (111 backend tests, frontend production build, dependency audits, Docker builds, clean Compose deployment and browser role journeys). This verifies CI, not a live production deployment or independent penetration test.
+**Review status:** Initial static review followed by targeted stabilization and successful GitHub Actions verification on commit `e85017b363416999254553390d24908af917e028` (111 backend tests, frontend production build, dependency audits, Docker builds, clean Compose deployment and browser role journeys). This verifies CI, not a live production deployment or independent penetration test.
 
 > This is an independent assessment rubric created for this review. It is not an official SIH marking scheme and does not predict selection or winning.
 
