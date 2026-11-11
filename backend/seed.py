@@ -39,85 +39,85 @@ DEMO_PASSWORD = os.getenv("DEMO_PASSWORD", "")
 # Demonstration cohort. The spread of levels is chosen to produce a realistic mix of gaps.
 DEMO_USERS = [
     # email, name, role, department, job role code, designation, levels overrides
-    ("admin@pramana.gov.in", "Ananya Raghavan", Role.ADMIN, "Statistics Wing",
+    ("admin@pramana.test", "Ananya Raghavan", Role.ADMIN, "Statistics Wing",
      "ISS-SURVEY", "Director (Statistics)", {}),
-    ("assessor@pramana.gov.in", "Vikram Deshpande", Role.ASSESSOR, "Statistics Wing",
+    ("assessor@pramana.test", "Vikram Deshpande", Role.ASSESSOR, "Statistics Wing",
      "DQOFF", "Deputy Director (Quality Assurance)", {}),
-    ("manager@pramana.gov.in", "Meera Krishnan", Role.MANAGER, "Survey Operations",
+    ("manager@pramana.test", "Meera Krishnan", Role.MANAGER, "Survey Operations",
      "SO", "Regional Statistical Officer", {}),
-    ("so.north@pramana.gov.in", "Rajesh Kumar", Role.MANAGER, "Survey Operations",
+    ("so.north@pramana.test", "Rajesh Kumar", Role.MANAGER, "Survey Operations",
      "SO", "Zonal Statistical Officer", {}),
-    ("learner.iss@pramana.gov.in", "Priya Nair", Role.LEARNER, "Survey Operations",
+    ("learner.iss@pramana.test", "Priya Nair", Role.LEARNER, "Survey Operations",
      "ISS-SURVEY", "Assistant Director (ISS)", {}),
-    ("learner.jso@pramana.gov.in", "Arun Sharma", Role.LEARNER, "Field Operations",
+    ("learner.jso@pramana.test", "Arun Sharma", Role.LEARNER, "Field Operations",
      "JSO", "Junior Statistical Officer", {}),
-    ("learner.analyst@pramana.gov.in", "Fatima Sheikh", Role.LEARNER, "Data Processing",
+    ("learner.analyst@pramana.test", "Fatima Sheikh", Role.LEARNER, "Data Processing",
      "ANALYST", "Statistical Analyst", {}),
-    ("learner.na@pramana.gov.in", "Suresh Iyer", Role.LEARNER, "National Accounts",
+    ("learner.na@pramana.test", "Suresh Iyer", Role.LEARNER, "National Accounts",
      "ISS-NA", "Assistant Director (NA)", {}),
-    ("learner.price@pramana.gov.in", "Deepa Menon", Role.LEARNER, "Price Statistics",
+    ("learner.price@pramana.test", "Deepa Menon", Role.LEARNER, "Price Statistics",
      "ISS-PRICE", "Statistical Officer (Prices)", {}),
-    ("learner.dq@pramana.gov.in", "Nikhil Bhatt", Role.LEARNER, "Quality Assurance",
+    ("learner.dq@pramana.test", "Nikhil Bhatt", Role.LEARNER, "Quality Assurance",
      "DQOFF", "Data Quality Officer", {}),
-    ("learner.jso2@pramana.gov.in", "Kavita Rao", Role.LEARNER, "Field Operations",
+    ("learner.jso2@pramana.test", "Kavita Rao", Role.LEARNER, "Field Operations",
      "JSO", "Statistical Investigator", {}),
-    ("learner.jso3@pramana.gov.in", "Manoj Verma", Role.LEARNER, "Field Operations",
+    ("learner.jso3@pramana.test", "Manoj Verma", Role.LEARNER, "Field Operations",
      "JSO", "Statistical Investigator", {}),
-    ("learner.analyst2@pramana.gov.in", "Aisha Khan", Role.LEARNER, "Data Processing",
+    ("learner.analyst2@pramana.test", "Aisha Khan", Role.LEARNER, "Data Processing",
      "ANALYST", "Statistical Analyst", {}),
-    ("learner.trainer@pramana.gov.in", "Gopal Subramanian", Role.LEARNER, "Training Division",
+    ("learner.trainer@pramana.test", "Gopal Subramanian", Role.LEARNER, "Training Division",
      "TRAINER", "Training Officer", {}),
 ]
 
 DEMO_PROFICIENCY = {
     # email -> {competency_code: declared_level}
-    "learner.iss@pramana.gov.in": {
+    "learner.iss@pramana.test": {
         "STAT.01": 4, "STAT.02": 3, "STAT.03": 3, "SAMP.01": 3, "SAMP.02": 2,
         "SAMP.03": 4, "EST.01": 3, "EST.02": 2, "EST.03": 2, "COMP.01": 3,
         "DQ.02": 2, "GOV.01": 3,
         "NA.01": 1, "PRICE.01": 1, "GIS.01": 1, "AIDATA.01": 1, "COMM.02": 2,
     },
-    "learner.jso@pramana.gov.in": {
+    "learner.jso@pramana.test": {
         "STAT.01": 3, "STAT.02": 2, "STAT.03": 2, "SAMP.03": 2, "SAMP.04": 2,
         "COMP.02": 2, "COMM.01": 2, "GOV.03": 2,
         "SAMP.01": 1, "EST.01": 1, "DQ.01": 1,
     },
-    "learner.analyst@pramana.gov.in": {
+    "learner.analyst@pramana.test": {
         "STAT.01": 3, "EST.01": 3, "EST.02": 2, "EST.03": 2, "COMP.01": 4,
         "COMP.02": 3, "COMP.03": 4, "ECON.01": 2, "COMM.01": 3,
         "ECON.02": 1, "SAMP.01": 2, "AIDATA.02": 1,
     },
-    "learner.na@pramana.gov.in": {
+    "learner.na@pramana.test": {
         "STAT.01": 4, "NA.01": 4, "NA.02": 3, "EST.01": 3, "ECON.01": 3,
         "ECON.02": 2, "COMP.01": 2, "DQ.02": 3, "GOV.03": 4,
         "PRICE.01": 1, "AIDATA.01": 1,
     },
-    "learner.price@pramana.gov.in": {
+    "learner.price@pramana.test": {
         "STAT.01": 3, "PRICE.01": 4, "PRICE.02": 3, "EST.01": 3, "DQ.01": 4,
         "DQ.03": 3, "COMM.02": 2, "COMP.01": 2,
         "EST.02": 2, "NA.01": 1, "SAMP.01": 2,
     },
-    "learner.dq@pramana.gov.in": {
+    "learner.dq@pramana.test": {
         "STAT.01": 3, "STAT.03": 3, "DQ.01": 4, "DQ.02": 4, "DQ.03": 3,
         "EST.02": 2, "COMM.01": 3, "COMM.02": 3,
         "SAMP.01": 2, "AIDATA.03": 1, "GOV.01": 2,
     },
-    "learner.jso2@pramana.gov.in": {
+    "learner.jso2@pramana.test": {
         "STAT.01": 2, "STAT.02": 1, "STAT.03": 2, "SAMP.03": 2, "SAMP.04": 1,
         "COMP.02": 1, "COMM.01": 1, "GOV.03": 3,
         "SAMP.01": 1, "DQ.01": 1, "EST.01": 2,
     },
-    "learner.jso3@pramana.gov.in": {
+    "learner.jso3@pramana.test": {
         "STAT.01": 3, "STAT.02": 2, "STAT.03": 3, "SAMP.03": 3, "SAMP.04": 2,
         "COMP.02": 2, "COMM.01": 2, "GOV.03": 3,
         "SAMP.01": 2, "DQ.01": 2, "EST.01": 2,
     },
-    "learner.analyst2@pramana.gov.in": {
+    "learner.analyst2@pramana.test": {
         "STAT.01": 3, "EST.01": 3, "EST.02": 3, "EST.03": 2, "COMP.01": 3,
         "COMP.02": 3, "COMP.03": 3, "ECON.01": 3, "ECON.02": 2, "COMM.01": 2,
         "SAMP.01": 3, "AIDATA.02": 2,
     },
-    "learner.trainer@pramana.gov.in": {
+    "learner.trainer@pramana.test": {
         "STAT.01": 4, "STAT.02": 3, "GOV.02": 4, "GOV.01": 3, "GOV.03": 4,
         "DQ.01": 3, "COMM.02": 4, "SAMP.01": 3, "EST.01": 2,
         "AIDATA.03": 2, "NA.01": 1, "PRICE.01": 1,
@@ -352,9 +352,9 @@ def seed_users(db, fw: FrameworkVersion, departments: dict[str, Department]) -> 
     db.commit()
 
     # manager relationships for the manager-scope tests
-    manager = users["manager@pramana.gov.in"]
-    for email in ("learner.jso@pramana.gov.in", "learner.jso2@pramana.gov.in",
-                  "learner.jso3@pramana.gov.in", "learner.iss@pramana.gov.in"):
+    manager = users["manager@pramana.test"]
+    for email in ("learner.jso@pramana.test", "learner.jso2@pramana.test",
+                  "learner.jso3@pramana.test", "learner.iss@pramana.test"):
         if email in users and users[email].manager_id is None:
             users[email].manager_id = manager.id
     db.commit()
@@ -434,7 +434,7 @@ def seed_users(db, fw: FrameworkVersion, departments: dict[str, Department]) -> 
 
 
 def seed_notifications(db, users: dict[str, User]) -> None:
-    learner = users.get("learner.iss@pramana.gov.in")
+    learner = users.get("learner.iss@pramana.test")
     if learner is None:
         return
     if db.scalar(select(Notification).where(Notification.user_id == learner.id).limit(1)):
@@ -477,7 +477,7 @@ def main() -> int:
 
         fw = seed_framework(db)
         users = seed_users(db, fw, departments)
-        admin = users["admin@pramana.gov.in"]
+        admin = users["admin@pramana.test"]
         seed_courses(db, admin)
         seed_demo_documents(db, admin)
         seed_notifications(db, users)
