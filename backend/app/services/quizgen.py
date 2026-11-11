@@ -159,7 +159,7 @@ def _validate_item(
         if normalised_quote and normalised_quote not in chunk_norm:
             notes.append("V5: quote is not verbatim from the passage")
 
-    hard_failures = [n for n in notes if n.startswith(("V1:", "V2:", "V3:", "V4:", "V6:"))]
+    hard_failures = [n for n in notes if n.startswith(("V1:", "V2:", "V3:", "V4:", "V5:", "V6:"))]
     return ValidationOutcome(ok=not hard_failures, notes=notes)
 
 
