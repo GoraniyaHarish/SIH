@@ -1,9 +1,10 @@
 # PRAMANA — competency intelligence platform for India's Official Statistical System.
 #
-# Usage:
-#   cp .env.example .env && edit JWT_SECRET   # required
+# Local setup:
+#   cp .env.example .env
+#   Set unique POSTGRES_PASSWORD and JWT_SECRET values in .env.
 #   docker compose up --build -d
-#   docker compose exec api python seed.py    # optional demonstration data
+#   docker compose exec -e ALLOW_DEMO_SEED=1 -e DEMO_PASSWORD='your-private-password' api python seed.py
 #   open http://localhost:3000
 #
 # The database image ships pgvector, so no extra extension image is required.
