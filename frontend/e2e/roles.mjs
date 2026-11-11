@@ -48,7 +48,7 @@ try {
     await page.getByLabel('Password').fill(password)
     await page.getByRole('button', { name: 'Sign in', exact: true }).click()
     await page.waitForURL((url) => url.pathname === '/app', { timeout: 15000 })
-    await page.getByRole('heading', { name: 'Dashboard' }).waitFor()
+    await page.locator('.topbar h1').waitFor()\n    if ((await page.locator('.topbar h1').textContent())?.trim() !== 'Dashboard') {\n      throw new Error(`${scenario.role}: dashboard did not render`)\n    }
 
     const staffLink = page.getByRole('link', { name: 'Training intelligence' })
     const adminLink = page.getByRole('link', { name: 'Admin workspace' })
@@ -62,7 +62,7 @@ try {
     for (const route of scenario.routes) {
       await page.goto(`${baseURL}${route}`, { waitUntil: 'domcontentloaded' })
       if (scenario.role !== 'admin' && route === '/app/analytics') {
-        await page.getByRole('heading', { name: 'Training intelligence' }).waitFor()
+        await page.locator('.topbar h1').waitFor()\n        if ((await page.locator('.topbar h1').textContent())?.trim() !== 'Training intelligence') {\n          throw new Error(`${scenario.role}: analytics page did not render`)\n        }
       } else if (scenario.role === 'admin') {
         const expected = {
           '/app/admin': 'Admin workspace',
@@ -70,7 +70,7 @@ try {
           '/app/admin/framework': 'Competency framework',
           '/app/admin/integrations': 'Integrations & system',
         }[route]
-        await page.getByRole('heading', { name: expected }).waitFor()
+        await page.locator('.topbar h1').waitFor()\n        if ((await page.locator('.topbar h1').textContent())?.trim() !== expected) {\n          throw new Error(`${scenario.role}: ${route} did not render the expected page`)\n        }
       } else {
         await page.getByRole('heading').first().waitFor()
       }
