@@ -125,6 +125,9 @@ def test_logout_revokes_refresh_and_clears_cookies(client, fixture_data):
         "/api/auth/logout", headers={"Authorization": f"Bearer {access}"}
     )
     assert out.status_code == 204
+    cleared_cookies = " ".join(out.headers.get_list("set-cookie")).lower()
+    assert "pramana_access=" in cleared_cookies and "max-age=0" in cleared_cookies
+    assert "pramana_refresh=" in cleared_cookies and "max-age=0" in cleared_cookies
 
     assert client.post("/api/auth/refresh", cookies={"pramana_refresh": raw}).status_code == 401
 
