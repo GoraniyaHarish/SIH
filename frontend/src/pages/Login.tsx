@@ -98,6 +98,7 @@ export default function Login() {
               with shared credentials.
             </p>
           </div>
+        </div>
       </section>
 
       <section className="auth-form-wrap">
