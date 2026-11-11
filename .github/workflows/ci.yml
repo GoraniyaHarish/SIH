@@ -96,4 +96,4 @@ jobs:
         run: npm audit --omit=dev
       - name: Verify patched React Router version
         working-directory: frontend
-        run: npm ls react-router-dom
+        run: node -e "const p = require('./package-lock.json'); const v = p.packages['node_modules/react-router-dom']?.version; console.log('react-router-dom', v); if (v !== '7.18.5') process.exit(1)"
