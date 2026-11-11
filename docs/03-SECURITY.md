@@ -50,14 +50,11 @@ See `docs/04-TEST-REPORT.md` for the tested commit and run details.
 
 ## Unverified / requires deployment-level review
 
-1. **Automated test coverage.** `backend/tests/` now holds **109 passing tests** covering
-   authentication (17), RBAC/IDOR (29), the gap engine (30), and malicious-upload handling,
-   prompt-injection detection/fencing, SQL-level pgvector RAG cross-user isolation, citation
-   stripping, and quiz validation rules V1–V6 (26) — see `docs/04-TEST-REPORT.md`. Writing and
-   expanding the suite found and fixed **seven** real application defects (including a JSONB
-   in-place mutation bug that caused shuffled quiz attempts to be mis-scored). **Still not
-   automated:** live adversarial LLM jailbreak evaluation against an external model and dependency
-   auditing (`pip-audit` and `npm audit --omit=dev`) are now required CI jobs.
+1. **Automated test coverage.** The backend suite reports **109 passing tests** across
+   authentication, role and resource authorization, competency-gap calculations, document upload,
+   retrieval isolation, citation handling and quiz generation/attempts. The test report records the
+   tested commit and CI run. Dependency audits are also required CI jobs. Live adversarial LLM
+   jailbreak evaluation against an external model is not part of the current suite.
 2. No penetration test, no fuzzing of the PDF/DOCX parsers, no adversarial corpus.
 3. Prompt-injection resistance has one regex-based detector and a structural fence; it has **not**
    been tested against a determined attacker.
