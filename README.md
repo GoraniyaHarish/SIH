@@ -1,151 +1,130 @@
 # PRAMANA
 
-**Competency intelligence and grounded learning for India's Official Statistical System**
+Competency assessment and evidence-based learning for India's Official Statistical System.
 
-Built for **SIH 26101** (Ministry of Statistics and Programme Implementation, Software / Smart Education).
+PRAMANA is the team's prototype for **SIH 26101**, under the Ministry of Statistics and Programme Implementation (MoSPI). The platform connects role requirements, competency assessment, skill-gap analysis, learning recommendations and reassessment in one workflow.
 
-> *pramāṇa* — a valid means of knowledge; evidence.
+## How it works
 
----
+1. A learner is associated with a statistical job role.
+2. The learner's current competencies are assessed.
+3. The gap engine compares current levels with role requirements and explains each priority.
+4. The recommendation service matches gaps to relevant courses and creates a learning plan.
+5. Learners study course material and can ask questions against uploaded documents.
+6. Quizzes can be generated from learning material, reviewed and attempted.
+7. Assessment and quiz evidence updates the learner's competency profile.
 
-## What this is
+The framework and seeded catalogue are prototype data. They are not an approved MoSPI competency standard or a live government course catalogue.
 
-PRAMANA starts from the competencies a **statistical job role requires**, not from a course list.
-A learner is assessed, their gaps are computed by a published formula, an explainable pathway is
-generated, grounded material is studied with cited answers, generated MCQs verify learning, and the
-reassessment closes the loop.
+## Technology
 
-It is deliberately **not** a generic LMS, a generic chatbot, or a generic admin dashboard.
-
----
-
-## Verified working (tested in this sandbox)
-
-| Flow | Result |
+| Area | Technology |
 |---|---|
-| `GET /api/health` | `status: ok`, database ok, redis ok, both integrations `not_configured` (truthful) |
-| Login (Argon2id + rotating refresh) | 200, access token issued |
-| `GET /api/me/gaps` | readiness **70.8%**, 9 gaps, 7 critical, P1/P3 bands with explanations |
-| `GET /api/me/recommendations` | deterministic scores (2.33, 1.52, 1.40) with reasons |
-| `POST /api/assistant/ask` | grounded answer, **3 page-anchored citations** |
-| Seed | 32 competencies, 8 job roles, 17 courses, 14 users, 3 indexed documents |
-| Automated tests | **102 passed** (`pytest tests/` — auth, RBAC/IDOR, gap engine, malicious uploads, pgvector RAG SQL isolation, citation stripping, quiz validation V1–V6) |
-| Frontend | `tsc --noEmit` clean, `vite build` OK (191 kB main / 62 kB gzip) |
+| Web application | React, TypeScript, Vite |
+| API | Python, FastAPI, Pydantic |
+| Persistence | PostgreSQL 17, SQLAlchemy, Alembic |
+| Document retrieval | pgvector |
+| Background services | Redis and an ingestion worker |
+| Deployment | Docker Compose |
+| Tests | pytest, Playwright browser journeys |
 
-**AI mode note.** External AI processing is disabled by default. With `AI_SEND_DOCUMENTS_EXTERNALLY=false`,
-source text and user queries are not sent to an external embedding or chat provider; the assistant
-uses local keyword retrieval and extractive passages. Enable outbound processing only after an
-explicit data-sharing decision and provider review. Set `AI_BASE_URL` / `AI_API_KEY` to configure
-a compatible provider; configuration alone does not constitute government approval.
+The backend is organised as a modular monolith. Business rules and access checks live in the API; the frontend presents API results.
 
----
+## Run locally with Docker Compose
 
-## Stack
-
-- **Backend** FastAPI · Pydantic v2 · SQLAlchemy 2 · Alembic · PostgreSQL 17 + pgvector (HNSW)
-- **Frontend** React 18 · TypeScript · Vite · hand-written CSS design system (no UI framework)
-- **AI** provider-neutral OpenAI-compatible client: timeouts, bounded retries, rate gate, telemetry
-- **Auth** Argon2id · 15-min access JWT · rotating single-use refresh tokens with family reuse detection
-
-## Layout
-
-```
-backend/   app/{core,models,schemas,services,ai,api/routers,integrations} · alembic/ · tests/ · seed.py
-frontend/  src/{components,pages,lib,styles}
-docs/      01-RESEARCH-AND-REQUIREMENTS.md · 02-ARCHITECTURE.md · 03-SECURITY.md
-```
-
-## Run locally
+Requirements: Docker Engine and the Docker Compose plugin.
 
 ```bash
-# 1. Postgres + pgvector (already provisioned in this sandbox)
-sudo pg_ctlcluster 17 main start
-createdb pramana   # user: pramana / pramana_local_dev
-
-# 2. Backend
-cd backend && export PYTHONPATH=. 
-../.venv/bin/alembic upgrade head
-DEMO_PASSWORD="choose-a-unique-local-password" ../.venv/bin/python seed.py
-../.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
-
-# 3. Frontend (proxies /api → :8000)
-cd frontend && npm install && npm run dev     # http://localhost:3000
+cp .env.example .env
 ```
 
-### Demonstration accounts
+Edit `.env` and set unique values for `POSTGRES_PASSWORD` and `JWT_SECRET`. Do not commit this file.
 
-Seeded demonstration accounts are created by `backend/seed.py`. Set a unique `DEMO_PASSWORD` (at least 12 characters) when running the seed command; the seed script contains no shared default password. Never reuse that password in a shared deployment.
+Start the application:
 
----
-
-## Design decisions worth knowing
-
-**Gap formula** (`services/gap.py`, printed in the UI):
-
-```
-deficit  = max(0, required − current)
-priority = deficit × (0.6 + 0.4·importance/5) × (1.35 if critical) × (0.85 + 0.15·confidence/5)
-band     = P1 ≥ 2.2 · P2 ≥ 1.4 · P3 ≥ 0.7 · P4
+```bash
+docker compose up --build -d
+docker compose ps
 ```
 
-Quiz evidence moves a level by at most ±0.5. Every level stores its **method** (`self`,
-`structured`, `assessor_reviewed`, `quiz_only`) so a self-rating is never displayed as proof.
+Open **http://localhost:3000**. API documentation is available at **http://localhost:3000/api/docs**.
 
-**RAG authorisation happens in SQL, before text leaves the database.** Retrieved passages are fenced
-as untrusted data, and citations that don't map to a retrieved chunk are stripped — the model cannot
-invent a document, page or quotation. Weak retrieval returns a refusal, not a guess.
+To create local demonstration accounts, set a private password and explicitly enable the seed operation:
 
-**MCQ validation** runs six checks before an item is stored: structure, duplicate options, source
-grounding, answer support, ambiguity, cross-question duplication. Items persist as `draft` and need
-explicit approval to publish. If no LLM is available, a deterministic cloze generator is used and
-flagged `extractive_fallback` — never silently.
+```bash
+docker compose exec -e ALLOW_DEMO_SEED=1 -e DEMO_PASSWORD='use-a-unique-password-here' api python seed.py
+```
 
-**Integrations are honest.** Research found **no publicly documented, lawfully accessible iGOT
-Karmayogi or NSSTA API**. The adapters are complete boundaries that perform real HTTP probes and
-report `not_configured` / `unreachable` / `auth_failed` truthfully. No iGOT record is fabricated;
-seeded courses are labelled `demonstration`.
+The seed command creates demonstration records. Do not use these accounts or data as real employee records. To stop the application:
 
-**Evidence tags** (`official` / `provisional` / `demonstration`) appear on every framework item,
-course and document. The competency framework is **provisional** — authored from public MoSPI/NSSTA
-role descriptions and the Mission Karmayogi FRAC concept, not a gazetted standard.
+```bash
+docker compose down
+```
 
----
+To remove the local database and uploaded files as well, use `docker compose down --volumes`. This permanently deletes local application data.
 
-## Visual identity
+## Configuration and data handling
 
-Deliberately not a dark SaaS dashboard. The concept is a **printed statistical instrument**:
-archival-paper ground with a graph-paper substrate, hairline rules, registration marks on feature
-cards, Fraunces headings against Inter body text, and a **five-segment proficiency ladder** instead
-of percentage bars — because proficiency is a discrete defined scale, not an arbitrary score.
-Palette: paper `#f6f2e9`, ink `#1a2130`, teal `#0d6b60`, ochre `#b96a15`, violet `#59508f`.
-Icons are hand-drawn SVG; the hero figure is a deterministic CSS competency matrix.
+- External AI processing is **off by default**. Document and query text is not sent to an external provider unless `AI_SEND_DOCUMENTS_EXTERNALLY=true` is deliberately configured.
+- AI provider settings are optional. Without an enabled provider, the assistant uses local keyword retrieval and extractive passages.
+- iGOT Karmayogi and NSSTA settings are empty by default. The application reports them as not configured; no live integration is claimed.
+- Never place API keys, tokens, passwords or real employee information in source control or demonstration data.
 
----
+See `.env.example` for the available settings.
 
-## Implemented vs not implemented
+## Project structure
 
-**Implemented** — RBAC (4 roles, backend-enforced) · versioned competency framework with domains,
-competencies, skills, 5-level scale, prerequisites, job-role mappings and review/approve workflow ·
-self/structured/assessor-reviewed assessments · gap analysis and recommendations · course catalogue,
-enrolment, progress · document upload (PDF/DOCX/TXT, magic-byte validated) with real processing
-states · grounded RAG with citations and refusal · MCQ generation, validation, review, publish,
-attempt, scoring, explanations · learning plans with regeneration · learner/manager/admin dashboards
-with k-anonymity suppression · audit log · iGOT/NSSTA adapter boundaries.
+```text
+backend/
+  app/
+    api/routers/       HTTP endpoints and request handling
+    core/              configuration, authentication and database setup
+    integrations/      external-service adapter boundaries
+    models/            database models
+    services/          competency, learning, document and quiz logic
+  alembic/             database migrations
+  tests/               backend tests
+frontend/
+  src/
+    components/        shared interface components
+    lib/               API client and authentication state
+    pages/             application screens
+    styles/            application styles
+  e2e/                 browser role journeys
+docs/
+  01-RESEARCH-AND-REQUIREMENTS.md
+  02-ARCHITECTURE.md
+  03-SECURITY.md
+  04-TEST-REPORT.md
+  evaluation/
+  research/
+```
 
-**Not implemented** (honest list): password-reset email flow (needs SMTP) · live iGOT/NSSTA sync
-(blocked on credentials, see docs) · OCR for scanned PDFs (fails explicitly instead) · WebSocket
-streaming for the assistant · role-specific bulk CSV user import · automated provider-failover across
-multiple AI vendors (interfaces allow it; one provider is wired).
+## Engineering notes
+
+### Competency gap calculation
+
+The gap service calculates a deficit between the required and current proficiency levels, then adjusts its priority using competency importance, criticality and confidence. The formula and thresholds are documented in the service and surfaced in the interface. The result is a decision-support aid, not a formal employee-performance rating.
+
+### Document-grounded answers
+
+Document access is checked before retrieval. Answers are built from authorised passages, and citations are restricted to retrieved chunks. Citation-ID validation confirms that a citation points to a retrieved source; it does not independently prove that every generated statement is entailed by that source. Review important answers against the original material.
+
+### Evidence labels
+
+Framework items, courses and documents distinguish official, provisional and demonstration material. The competency mappings in this prototype are provisional and require review by MoSPI/NSSTA subject-matter experts.
+
+## Current status
+
+The review branch has automated backend, frontend, dependency-audit, Docker-build and Compose/browser checks. The latest documented CI run is recorded in [the test report](docs/04-TEST-REPORT.md).
+
+This is a prototype, not a production government service. It has not undergone an independent penetration test, formal compliance assessment or operational deployment review. Live iGOT/NSSTA integration, government SSO, approved competency-framework data and production hosting remain outside the verified scope.
 
 ## Documentation
 
-- `docs/01-RESEARCH-AND-REQUIREMENTS.md` — official PS text, domain research, source register,
-  evidence-status register, documented assumptions
-- `docs/02-ARCHITECTURE.md` — modules, data model, data flow, API surface
-- `docs/03-SECURITY.md` — threat model, controls, what was tested and what remains unverified
-
-## Status
-
-Prototype. **Not** audited, **not** penetration-tested, **not** a government platform, and **not**
-claimed compliant with any regulation. The competency framework requires domain-expert validation
-before operational use.
+- [Research and requirements](docs/01-RESEARCH-AND-REQUIREMENTS.md)
+- [Architecture](docs/02-ARCHITECTURE.md)
+- [Security review](docs/03-SECURITY.md)
+- [Test report](docs/04-TEST-REPORT.md)
+- [Independent SIH review](docs/evaluation/2026-11-independent-review.md)
+- [Government ecosystem evidence](docs/research/government-learning-ecosystem-evidence.md)
