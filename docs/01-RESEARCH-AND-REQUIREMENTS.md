@@ -7,10 +7,12 @@
 
 ---
 
-## 1. Official problem statement (verbatim from sih.gov.in/sih2026PS)
+## 1. Problem statement
 
-Retrieved directly from the official SIH 2026 problem-statement listing page (row 165 of the
-"Smart India Hackathon 2026" statement table):
+The SIH 26101 wording below is retained as the working problem-statement transcription used for
+this project. The official SIH portal listing could not be independently retrieved during the
+latest review (HTTP 403); the full wording was corroborated against a secondary listing. Do not
+represent this transcription as a verified capture from the official portal:
 
 > **SIH26101** — *Develop an AI enabled learning platform that identifies competency gaps,
 > recommends personalized training through integration with the iGOT Karmayogi ecosystem, and
@@ -19,10 +21,9 @@ Retrieved directly from the official SIH 2026 problem-statement listing page (ro
 >
 > Ministry: **MoSPI** · Type: **Software** · Theme: **Smart Education** · Published: 5 October 2026
 
-**Status: OFFICIAL / VERIFIED** (primary source: the SIH portal itself).
-No assumptions are made beyond this sentence. The extended requirements below are derived from
-the statement's three explicit capabilities plus our own product reasoning, and are labelled as
-such.
+**Source status: SECONDARY-SOURCE TRANSCRIPTION; official portal verification unavailable.**
+The extended requirements below are derived from the statement's capabilities plus product
+reasoning, and are labelled as such. Recheck the official SIH portal when it is accessible.
 
 ### 1.1 Decomposition of the official statement into mandatory capabilities
 
