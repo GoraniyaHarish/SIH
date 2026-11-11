@@ -46,7 +46,7 @@ jobs:
       - name: Run backend test suite
         env:
           TEST_DATABASE_URL: postgresql+psycopg://pramana:pramana_ci_password@localhost:5432/pramana_test
-        run: PYTHONPATH=. pytest tests/ -q
+        run: PYTHONPATH=. pytest tests/ -v --tb=short
 
   frontend-build:
     name: Frontend typecheck and production build
